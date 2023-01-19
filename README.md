@@ -1,6 +1,6 @@
 # Haxe Repro tool
 
-See [Recording setup](./Recording.md) to setup recording on your machine.
+See [Recording setup](./doc/Recording.md) to setup recording on your machine.
 
 ## Build the repro tools
 
