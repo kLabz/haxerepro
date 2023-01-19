@@ -1,0 +1,16 @@
+-cp haxeserver/src
+-cp haxeserver/haxe-lsp/src
+-cp haxeserver/haxe-lsp/shared
+
+-lib hxargs
+-lib language-server-protocol
+-lib safety
+-lib vscode-json-rpc
+-lib hxnodejs
+
+-D analyzer-optimize
+-D haxeserver.repro.displayrequests_wait
+-D haxeserver.repro.displayrequests_delay=100
+
+-main haxeserver.repro.ReplayRecording
+--js bin/replay.js

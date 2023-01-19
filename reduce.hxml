@@ -1,0 +1,11 @@
+-cp haxeserver/src
+-cp haxeserver/haxe-lsp/shared
+
+-lib hxargs
+-lib safety
+-lib hxnodejs
+
+-D analyzer-optimize
+
+-main haxeserver.repro.ReduceRecording
+--js bin/reduce.js

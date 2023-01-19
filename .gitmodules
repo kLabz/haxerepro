@@ -1,3 +1,4 @@
 [submodule "haxeserver"]
 	path = haxeserver
 	url = https://github.com/kLabz/haxeserver
+	branch = poc/repro-tool
