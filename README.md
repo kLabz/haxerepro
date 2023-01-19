@@ -11,16 +11,10 @@ haxelib newrepo
 haxelib install --always install.hxml
 ```
 
-You can then build `bin/replay.js` with:
+You can then build `bin/replay.js` and `bin/reduce.js` tools with:
 
 ```sh
-haxe replay.hxml
-```
-
-And `bin/reduce.js` with:
-
-```sh
-haxe reduce.hxml
+haxe build.hxml
 ```
 
 ## Using the replay tool

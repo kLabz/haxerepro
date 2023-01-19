@@ -1,16 +1,25 @@
 -cp haxeserver/src
--cp haxeserver/haxe-lsp/src
 -cp haxeserver/haxe-lsp/shared
 
 -lib hxargs
--lib language-server-protocol
 -lib safety
--lib vscode-json-rpc
 -lib hxnodejs
 
 -D analyzer-optimize
+
+--each
+
+-cp haxeserver/haxe-lsp/src
+-lib language-server-protocol
+-lib vscode-json-rpc
+
 -D haxeserver.repro.displayrequests_wait
 -D haxeserver.repro.displayrequests_delay=100
 
 -main haxeserver.repro.ReplayRecording
 --js bin/replay.js
+
+--next
+
+-main haxeserver.repro.ReduceRecording
+--js bin/reduce.js
