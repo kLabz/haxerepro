@@ -2,3 +2,9 @@
 	path = haxeserver
 	url = https://github.com/kLabz/haxeserver
 	branch = poc/repro-tool
+[submodule "projects/xredefined"]
+	path = projects/xredefined
+	url = https://github.com/kLabz/haxerepro-xredefined/
+[submodule "projects/stackoverflow"]
+	path = projects/stackoverflow
+	url = https://github.com/kLabz/haxerepro-stackoverflow
