@@ -513,7 +513,7 @@ class ReplayRecording {
 	}
 
 	function applyGitPatch(next:Void->Void):Void {
-		git("apply", "--allow-empty", Path.join([path, REPRO_PATCHFILE]));
+		git("apply", "--allow-empty", "--whitespace=fix", Path.join([path, REPRO_PATCHFILE]));
 		next();
 	}
 
