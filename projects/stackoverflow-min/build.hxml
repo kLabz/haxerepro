@@ -1,4 +1,4 @@
--lib hxnodejs
+--macro allowPackage("sys")
 -main Main
 --no-output
 --js out.js
