@@ -1,0 +1,24 @@
+name: CI
+
+on: [push]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        haxe: [4.2.5]
+      fail-fast: true
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: krdlab/setup-haxe@v1
+        with:
+          haxe-version: ${{ matrix.haxe }}
+
+      - run: haxe -version
+      - run: haxelib install --always install.hxml
+
+      - name: Compile tools
+        run: haxe build.hxml
