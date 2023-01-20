@@ -410,7 +410,7 @@ class ReplayRecording {
 			}
 		} catch (e) {
 			console.error(e);
-			cleanup();
+			exit(1);
 		}
 	}
 
