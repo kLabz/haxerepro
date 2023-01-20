@@ -4,3 +4,4 @@
 -lib language-server-protocol:git:https://github.com/vshaxe/language-server-protocol-haxe.git#a6baa2ddcd792e99b19398048ef95aa00f0aa1f6
 -lib utest:git:https://github.com/haxe-utest/utest.git#57b8e56cb3a24d7a4136113b3b820972d47be1f0
 -lib vscode-json-rpc:git:https://github.com/vshaxe/vscode-json-rpc.git#d04426d35d9a404a1ebc36127ecbe93473f6adff
+-lib haxeserver:git:https://github.com/kLabz/haxeserver.git#dfd1705a4bf845bc1ab8610b551359422259c2ff

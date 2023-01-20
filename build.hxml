@@ -1,6 +1,7 @@
--cp haxeserver/src
--cp haxeserver/haxe-lsp/shared
+-cp src
+-cp haxe-lsp/shared
 
+-lib haxeserver
 -lib hxargs
 -lib safety
 -lib hxnodejs
