@@ -3,7 +3,6 @@
 - echo "Trigger X redefined from X"
 - echo "----------------------------------------------------"
 - root "/git/haxe-libs/haxeserver/repro/xredefined"
-- abortOnFailure
 
 - start
 

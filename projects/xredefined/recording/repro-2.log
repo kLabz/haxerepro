@@ -3,7 +3,6 @@
 - echo "Trigger completion error"
 - echo "----------------------------------------------------"
 - root "/git/haxe-libs/haxeserver/repro/xredefined"
-- abortOnFailure
 
 - start
 

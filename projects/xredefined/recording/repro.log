@@ -3,7 +3,6 @@
 - echo "Trigger first error that leads to X redefined from X"
 - echo "----------------------------------------------------"
 - root "/git/haxe-libs/haxeserver/repro/xredefined"
-- abortOnFailure
 
 - start
 
@@ -37,8 +36,3 @@
 - displayResponse
 > serverRequest "compilation"
 ["build.hxml"]
-
-< compilationResult
-<<EOF
-
-EOF
