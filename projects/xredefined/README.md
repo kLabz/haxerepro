@@ -1,14 +1,5 @@
 # Repro for "X is redefined from X" error
 
-To install dependencies:
-
-```sh
-haxelib newrepo
-haxelib install --always install.hxml
-```
-
-Also install [haxerepro tools](https://github.com/kLabz/haxerepro) to replay these recordings.
-
 ## 1st repro - Get initial issue leading to x redefined
 
 ```

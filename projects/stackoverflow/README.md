@@ -15,12 +15,12 @@ haxelib install --always install.hxml
 You can then run [haxerepro tools](https://github.com/kLabz/haxerepro) on this recording, from `haxeserver` folder:
 
 ```
-node /path/to/haxerepro/bin/replay.js --path /path/to/haxerepro-stackoverflow --file repro-min.log
+node /path/to/haxerepro/bin/replay.js --path /path/to/haxerepro/projects/stackoverflow --file repro-min.log
 ```
 
 On linux, you probably need `repro-min-linux.log` to reproduce the issue without
 additional errors:
 
 ```
-node /path/to/haxerepro/bin/replay.js --path /path/to/haxerepro-stackoverflow --file repro-min-linux.log
+node /path/to/haxerepro/bin/replay.js --path /path/to/haxerepro/projects/stackoverflow --file repro-min-linux.log
 ```
