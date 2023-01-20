@@ -1,9 +1,3 @@
-[submodule "projects/xredefined"]
-	path = projects/xredefined
-	url = https://github.com/kLabz/haxerepro-xredefined/
-[submodule "projects/stackoverflow"]
-	path = projects/stackoverflow
-	url = https://github.com/kLabz/haxerepro-stackoverflow
 [submodule "haxe-lsp"]
 	path = haxe-lsp
 	url = https://github.com/kLabz/haxe-languageserver
