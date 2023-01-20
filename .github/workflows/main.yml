@@ -15,7 +15,7 @@ jobs:
         with:
           submodules: recursive
 
-      - uses: kLabz/setup-haxe@06eaf2c2eb3ec981b1caa2a8bee3ba5509606183
+      - uses: kLabz/setup-haxe@bb4d566a79354f25a29002f76a36bc54ead97e30
         with:
           haxe-version: ${{ matrix.haxe }}
           haxe-nightly: ${{ matrix.haxe == 'latest' }}
@@ -28,7 +28,6 @@ jobs:
 
       - name: Repro xredefined
         run: |
-          set -ex
           cd projects/xredefined
           node ../../bin/replay.js --path recording --file repro.log
           node ../../bin/replay.js --path recording --file repro-1.log
