@@ -44,4 +44,4 @@ jobs:
           cd haxeserver
           haxelib newrepo
           haxelib install --always install.hxml
-          node ../../../bin/replay.js --path .. --file repro-min.log
+          node ../../../bin/replay.js --path .. --file repro-min-${{ matrix.os }}.log

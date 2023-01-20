@@ -822,7 +822,6 @@
 # Removing this request breaks repro
 +21907.3s > serverRequest "compilation"
 ["--cwd /git/haxe-libs/haxeserver","repro.hxml","-D","some-compile-only-define"]
-
 - displayResponse
 > serverRequest "server/contexts"
 ["--display","{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"server/contexts\"}"]
@@ -3170,6 +3169,13 @@
 # ["--cwd /git/haxe-libs/haxeserver","repro.hxml","-D","some-compile-only-define"]
 # - pause
 
+- assert output
+<<EOF
+[{"file":null,"diagnostics":[{"kind":2,"severity":1,"range":null,"args":"(unknown) : Uncaught exception Stack overflow"}]}]
+EOF
+
+# Fails with stack overflow
+# - displayResponse
 +50542.3s > serverRequest "@diagnostics"
 ["--cwd","/git/haxe-libs/haxeserver","-D","display-details","--no-output","repro.hxml","--display","/git/haxe-libs/haxeserver/src/haxeserver/repro/HaxeRepro.hx@0@diagnostics"]
 
@@ -3327,26 +3333,6 @@
 {"textDocument":{"version":2403,"uri":"file:///git/haxe-libs/haxeserver/src/haxeserver/repro/HaxeRepro.hx"},"contentChanges":[{"rangeLength":1,"range":{"start":{"line":322,"character":38},"end":{"line":322,"character":39}},"text":""},{"rangeLength":0,"range":{"start":{"line":322,"character":38},"end":{"line":322,"character":38}},"text":")"}]}
 +50821.8s - didChangeTextDocument
 {"textDocument":{"version":2404,"uri":"file:///git/haxe-libs/haxeserver/src/haxeserver/repro/HaxeRepro.hx"},"contentChanges":[{"rangeLength":0,"range":{"start":{"line":322,"character":39},"end":{"line":322,"character":39}},"text":";"}]}
-
-+50830.7s > serverRequest "@diagnostics"
-["--cwd","/git/haxe-libs/haxeserver","-D","display-details","--no-output","repro.hxml","--display","/git/haxe-libs/haxeserver/src/haxeserver/repro/HaxeRepro.hx@0@diagnostics"]
-+50841.4s > serverRequest "compilation"
-["--cwd /git/haxe-libs/haxeserver","repro.hxml","-D","some-compile-only-define"]
-
-+50830.7s > serverRequest "@diagnostics"
-["--cwd","/git/haxe-libs/haxeserver","-D","display-details","--no-output","repro.hxml","--display","/git/haxe-libs/haxeserver/src/haxeserver/repro/HaxeRepro.hx@0@diagnostics"]
-+50830.7s > serverRequest "@diagnostics"
-["--cwd","/git/haxe-libs/haxeserver","-D","display-details","--no-output","repro.hxml","--display","/git/haxe-libs/haxeserver/src/haxeserver/repro/HaxeRepro.hx@0@diagnostics"]
-+50841.4s > serverRequest "compilation"
-["--cwd /git/haxe-libs/haxeserver","repro.hxml","-D","some-compile-only-define"]
-
-- assert output
-<<EOF
-[{"file":null,"diagnostics":[{"kind":2,"severity":1,"range":null,"args":"(unknown) : Uncaught exception Stack overflow"}]}]
-EOF
-
-+50830.7s > serverRequest "@diagnostics"
-["--cwd","/git/haxe-libs/haxeserver","-D","display-details","--no-output","repro.hxml","--display","/git/haxe-libs/haxeserver/src/haxeserver/repro/HaxeRepro.hx@0@diagnostics"]
 
 - assert output
 <<EOF
