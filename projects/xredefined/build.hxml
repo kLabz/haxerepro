@@ -1,0 +1,6 @@
+-main TestsMain
+--macro define('nodejs')
+-D nodejs
+-cp src/
+--no-output
+-js test.js

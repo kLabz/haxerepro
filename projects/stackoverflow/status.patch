@@ -1,0 +1,20 @@
+diff --git a/build.hxml b/build.hxml
+deleted file mode 100644
+index 86aaa18..0000000
+--- a/build.hxml
++++ /dev/null
+@@ -1,5 +0,0 @@
+--cp src
+--cp tests
+--D analyzer-optimize
+--lib utest
+--main Main
+\ No newline at end of file
+diff --git a/build.hxml b/build.hxml
+new file mode 120000
+index 0000000..5697c4e
+--- /dev/null
++++ b/build.hxml
+@@ -0,0 +1 @@
++repro.hxml
+\ No newline at end of file

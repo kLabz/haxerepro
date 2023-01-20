@@ -1,0 +1,44 @@
+# Currently reproduces on `development` (4.2.x and `fix/xredefined-1` are fine)
+
+- echo "Trigger completion error"
+- echo "----------------------------------------------------"
+- root "/git/haxe-libs/haxeserver/repro/xredefined"
+- abortOnFailure
+
+- start
+
+# Comment this out when working with vshaxe cache view, since it's doing the
+# cache build on its own:
+- displayResponse
+> serverRequest "cache build"
+["--no-output","--each","--no-output","build.hxml"]
+
+> serverRequest "server/invalidate"
+["--times","-D","macro-times","--display","{\"jsonrpc\":\"2.0\",\"id\":4,\"method\":\"server/invalidate\",\"params\":{\"file\":\"/git/haxe-libs/haxeserver/repro/xredefined/src/CodeBuilder.macro.hx\"}}"]
+
+# - assert success
+- assert 23 items
+- echo "data.args.|"
+- displayResponse
+> serverRequest "display/completion"
+["--cwd","/git/haxe-libs/haxeserver/repro/xredefined","-D","display-details","--no-output","--times","-D","macro-times","build.hxml","--display","{\"jsonrpc\":\"2.0\",\"id\":36,\"method\":\"display/completion\",\"params\":{\"file\":\"/git/haxe-libs/haxeserver/repro/xredefined/src/CodeBuilder.macro.hx\",\"contents\":\"class CodeBuilder {\\n    var data:FunctionData;\\n\\n    public function new(data:FunctionData) {\\n        this.data = data;\\n    }\\n\\n    public function build():Void {\\n\\t\\tdata.args.\\n    }\\n\\n}\\n\\n@:structInit class FunctionData {\\n\\tpublic final args:Array<String>;\\n}\\n\",\"offset\":173,\"wasAutoTriggered\":true,\"meta\":[\":deprecated\"]}}"]
+
+# - assert success
+- assert 23 items
+- echo "data.args.|"
+- displayResponse
+> serverRequest "display/completion"
+["--cwd","/git/haxe-libs/haxeserver/repro/xredefined","-D","display-details","--no-output","--times","-D","macro-times","build.hxml","--display","{\"jsonrpc\":\"2.0\",\"id\":36,\"method\":\"display/completion\",\"params\":{\"file\":\"/git/haxe-libs/haxeserver/repro/xredefined/src/CodeBuilder.macro.hx\",\"contents\":\"class CodeBuilder {\\n    var data:FunctionData;\\n\\n    public function new(data:FunctionData) {\\n        this.data = data;\\n    }\\n\\n    public function build():Void {\\n\\t\\tdata.args.\\n    }\\n\\n}\\n\\n@:structInit class FunctionData {\\n\\tpublic final args:Array<String>;\\n}\\n\",\"offset\":173,\"wasAutoTriggered\":true,\"meta\":[\":deprecated\"]}}"]
+
+# - assert success
+- assert 23 items
+- echo "data.args.|"
+- displayResponse
+> serverRequest "display/completion"
+["--cwd","/git/haxe-libs/haxeserver/repro/xredefined","-D","display-details","--no-output","--times","-D","macro-times","build.hxml","--display","{\"jsonrpc\":\"2.0\",\"id\":36,\"method\":\"display/completion\",\"params\":{\"file\":\"/git/haxe-libs/haxeserver/repro/xredefined/src/CodeBuilder.macro.hx\",\"contents\":\"class CodeBuilder {\\n    var data:FunctionData;\\n\\n    public function new(data:FunctionData) {\\n        this.data = data;\\n    }\\n\\n    public function build():Void {\\n\\t\\tdata.args.\\n    }\\n\\n}\\n\\n@:structInit class FunctionData {\\n\\tpublic final args:Array<String>;\\n}\\n\",\"offset\":173,\"wasAutoTriggered\":true,\"meta\":[\":deprecated\"]}}"]
+
+- assert 0 items
+- echo "data.args.|"
+- displayResponse
+> serverRequest "display/completion"
+["--cwd","/git/haxe-libs/haxeserver/repro/xredefined","-D","display-details","--no-output","--times","-D","macro-times","build.hxml","--display","{\"jsonrpc\":\"2.0\",\"id\":36,\"method\":\"display/completion\",\"params\":{\"file\":\"/git/haxe-libs/haxeserver/repro/xredefined/src/CodeBuilder.macro.hx\",\"contents\":\"class CodeBuilder {\\n    var data:FunctionData;\\n\\n    public function new(data:FunctionData) {\\n        this.data = data;\\n    }\\n\\n    public function build():Void {\\n\\t\\tdata.args.\\n    }\\n\\n}\\n\\n@:structInit class FunctionData {\\n\\tpublic final args:Array<String>;\\n}\\n\",\"offset\":173,\"wasAutoTriggered\":true,\"meta\":[\":deprecated\"]}}"]

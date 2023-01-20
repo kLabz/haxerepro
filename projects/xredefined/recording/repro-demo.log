@@ -1,0 +1,66 @@
+# Debugging repro files
+
+# Misc:
+# ---------------------------------
+# Lines starting with `#` are comments and will be ignored
+# Same goes for empty lines
+# Recordings will include optional timings in front of each lines, this can be ignored
+# Output will add a reference to the line number of the repro file in the beginning of each relevant line
+# > is for commands sent to server, < for server responses, - for local stuff
+
+# Repro config:
+# ---------------------------------
+# Root sets the base path used when recording, and is used to map absolute paths
+# to local paths:
+- root "/tmp/tmp.pAKSFWWUnw"
+# Note: userConfig, displayServer and displayArguments are currently not used
+
+# Git commands
+# ---------------------------------
+# TODO: document these -- not used for current repro scripts
+
+# Commands:
+# ---------------------------------
+- echo "This prints some text to the output"
+# This is needed after the configuration phase to actually do something:
+- start
+# Pause repro script until user presses <ENTER>:
+- pause
+# Activate step by step mode (pause between all server requests):
+- stepByStep 1
+# Disable step by step
+- stepByStep 0
+# Print server response for next request:
+- displayResponse
+> serverRequest 42 "server/something"
+["..."]
+# Abort repro (with exit code) on first failure
+# Currently supports compilation failure and (hacky) completion request failure
+- abortOnFailure
+# Can also be enabled/disabled
+- abortOnFailure 0
+- abortOnFailure 1
+
+# server/contexts example
+# ---------------------------------
+- displayResponse
+> serverRequest "server/contexts"
+["--display","{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"server/contexts\"}"]
+
+# server/memory/module example
+# ---------------------------------
+- displayResponse
+> serverRequest "server/memory/module"
+["--display","{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"server/memory/module\",\"params\":{\"signature\":\"46758be9d6852a00c50c16bb8ef5c666\",\"path\":\"hxser.gen.CodeBuilder\"}}"]
+
+# server/module example
+# ---------------------------------
+- displayResponse
+> serverRequest "server/module"
+["--display","{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"server/module\",\"params\":{\"signature\":\"46758be9d6852a00c50c16bb8ef5c666\",\"path\":\"hxser.gen.CodeBuilder\"}}"]
+
+# server/type example
+# ---------------------------------
+- displayResponse
+> serverRequest "server/type"
+["--display","{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"server/type\",\"params\":{\"signature\":\"46758be9d6852a00c50c16bb8ef5c666\",\"modulePath\":\"hxser.gen.CodeBuilder\",\"typeName\":\"CodeBuilder\"}}"]
