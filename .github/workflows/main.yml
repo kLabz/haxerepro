@@ -8,7 +8,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         haxe: [4.2.5, latest]
-      fail-fast: true
+      fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
@@ -25,3 +25,11 @@ jobs:
 
       - name: Compile tools
         run: haxe build.hxml
+
+      - name: Repro xredefined
+        run: |
+          set -ex
+          cd projects/xredefined
+          node ../../bin/replay.js --path recording --file repro.log
+          node ../../bin/replay.js --path recording --file repro-1.log
+          node ../../bin/replay.js --path recording --file repro-2.log
