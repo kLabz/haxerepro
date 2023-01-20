@@ -27,6 +27,8 @@ jobs:
         run: haxe build.hxml
 
       - name: Repro xredefined
+        # This repro only reproduces on nightlies
+        if: ${{ matrix.haxe == 'latest' }}
         run: |
           cd projects/xredefined
           node ../../bin/replay.js --path recording --file repro.log
