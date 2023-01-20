@@ -34,3 +34,12 @@ jobs:
           node ../../bin/replay.js --path recording --file repro.log
           node ../../bin/replay.js --path recording --file repro-1.log
           node ../../bin/replay.js --path recording --file repro-2.log
+
+      - name: Repro stackoverflow
+        run: |
+          cd projects/stackoverflow
+          git clone --recursive -b poc/repro-tool https://github.com/kLabz/haxeserver.git
+          cd haxeserver
+          haxelib newrepo
+          haxelib install --always install.hxml
+          node ../../../bin/replay.js --path .. --file repro-min.log
