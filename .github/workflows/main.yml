@@ -35,6 +35,13 @@ jobs:
           node ../../bin/replay.js --path recording --file repro-1.log
           node ../../bin/replay.js --path recording --file repro-2.log
 
+      - name: Repro stackoverflow (min)
+        # This repro only reproduces on nightlies
+        if: ${{ matrix.haxe == 'latest' }}
+        run: |
+          cd projects/stackoverflow-min
+          node ../../bin/replay.js --path recording --file repro-min.log
+
       - name: Repro stackoverflow
         # This repro only reproduces on nightlies
         if: ${{ matrix.haxe == 'latest' }}

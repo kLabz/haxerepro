@@ -1,0 +1,124 @@
+# Reduced from repro.log
++0s - userConfig
+{"postfixCompletion":{"level":"filtered"},"displayPort":"auto","enableServerRecording":true,"serverRecordingPath":".vim/recording/","buildCompletionCache":true,"codeGeneration":{"functions":{"anonymous":{"argumentTypeHints":false,"returnTypeHint":"never","useArrowSyntax":true,"placeOpenBraceOnNewLine":false,"explicitPublic":false,"explicitPrivate":false,"explicitNull":false},"field":{"argumentTypeHints":true,"returnTypeHint":"non-void","useArrowSyntax":false,"placeOpenBraceOnNewLine":false,"explicitPublic":false,"explicitPrivate":false,"explicitNull":false}},"imports":{"style":"type","enableAutoImports":true},"switch_":{"parentheses":false}},"diagnosticsPathFilter":"${workspaceRoot}","enableCodeLens":false,"enableCompletionCacheWarning":true,"enableDiagnostics":true,"enableServerView":false,"enableSignatureHelpDocumentation":true,"exclude":["zpp_nape"],"importsSortOrder":"all-alphabetical","inlayHints":{"variableTypes":true,"parameterNames":true,"parameterTypes":false,"functionReturnTypes":true,"conditionals":false},"maxCompletionItems":20,"renameSourceFolders":["src","source","Source","test","tests"],"useLegacyCompletion":false}
++0s - displayServer
+{"path":"haxe","env":{},"arguments":[],"print":{"completion":false,"reusing":false},"useSocket":true}
++0s - displayArguments
+["build.hxml"]
++0s - root "/git/haxe-libs/haxeserver"
++0.3s - start
+> serverRequest "cache build"
+["--no-output","--each","--no-output","build.hxml"]
++13s > serverRequest 3 "server/readClassPaths"
+["--cwd","/git/haxe-libs/haxeserver","-D","display-details","--no-output","build.hxml","--display","{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"server/readClassPaths\"}"]
+> serverRequest "server/contexts"
+["--display","{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"server/contexts\"}"]
+
++21907.3s > serverRequest "compilation"
+["--cwd /git/haxe-libs/haxeserver","build.hxml","-D","some-compile-only-define"]
+
+- displayResponse
+> serverRequest "server/contexts"
+["--display","{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"server/contexts\"}"]
+
+# Ok, now we're just looping between:
+# - diagnostics on Main
+# - compilation with a define that doesn't exist on display requests
+# Until stack overflow happens
+
++22594.4s > serverRequest "@diagnostics"
+["--cwd","/git/haxe-libs/haxeserver","-D","display-details","--no-output","build.hxml","--display","/git/haxe-libs/haxeserver/Main.hx@0@diagnostics"]
++22672.3s > serverRequest "compilation"
+["--cwd /git/haxe-libs/haxeserver","build.hxml","-D","some-compile-only-define"]
+
++22594.4s > serverRequest "@diagnostics"
+["--cwd","/git/haxe-libs/haxeserver","-D","display-details","--no-output","build.hxml","--display","/git/haxe-libs/haxeserver/Main.hx@0@diagnostics"]
++22672.3s > serverRequest "compilation"
+["--cwd /git/haxe-libs/haxeserver","build.hxml","-D","some-compile-only-define"]
+
++22594.4s > serverRequest "@diagnostics"
+["--cwd","/git/haxe-libs/haxeserver","-D","display-details","--no-output","build.hxml","--display","/git/haxe-libs/haxeserver/Main.hx@0@diagnostics"]
++22672.3s > serverRequest "compilation"
+["--cwd /git/haxe-libs/haxeserver","build.hxml","-D","some-compile-only-define"]
+
++22594.4s > serverRequest "@diagnostics"
+["--cwd","/git/haxe-libs/haxeserver","-D","display-details","--no-output","build.hxml","--display","/git/haxe-libs/haxeserver/Main.hx@0@diagnostics"]
++22672.3s > serverRequest "compilation"
+["--cwd /git/haxe-libs/haxeserver","build.hxml","-D","some-compile-only-define"]
+
++22594.4s > serverRequest "@diagnostics"
+["--cwd","/git/haxe-libs/haxeserver","-D","display-details","--no-output","build.hxml","--display","/git/haxe-libs/haxeserver/Main.hx@0@diagnostics"]
++22672.3s > serverRequest "compilation"
+["--cwd /git/haxe-libs/haxeserver","build.hxml","-D","some-compile-only-define"]
+
++22594.4s > serverRequest "@diagnostics"
+["--cwd","/git/haxe-libs/haxeserver","-D","display-details","--no-output","build.hxml","--display","/git/haxe-libs/haxeserver/Main.hx@0@diagnostics"]
++22672.3s > serverRequest "compilation"
+["--cwd /git/haxe-libs/haxeserver","build.hxml","-D","some-compile-only-define"]
+
++22594.4s > serverRequest "@diagnostics"
+["--cwd","/git/haxe-libs/haxeserver","-D","display-details","--no-output","build.hxml","--display","/git/haxe-libs/haxeserver/Main.hx@0@diagnostics"]
++22672.3s > serverRequest "compilation"
+["--cwd /git/haxe-libs/haxeserver","build.hxml","-D","some-compile-only-define"]
+
++22594.4s > serverRequest "@diagnostics"
+["--cwd","/git/haxe-libs/haxeserver","-D","display-details","--no-output","build.hxml","--display","/git/haxe-libs/haxeserver/Main.hx@0@diagnostics"]
++22672.3s > serverRequest "compilation"
+["--cwd /git/haxe-libs/haxeserver","build.hxml","-D","some-compile-only-define"]
+
++22594.4s > serverRequest "@diagnostics"
+["--cwd","/git/haxe-libs/haxeserver","-D","display-details","--no-output","build.hxml","--display","/git/haxe-libs/haxeserver/Main.hx@0@diagnostics"]
++22672.3s > serverRequest "compilation"
+["--cwd /git/haxe-libs/haxeserver","build.hxml","-D","some-compile-only-define"]
+
++22594.4s > serverRequest "@diagnostics"
+["--cwd","/git/haxe-libs/haxeserver","-D","display-details","--no-output","build.hxml","--display","/git/haxe-libs/haxeserver/Main.hx@0@diagnostics"]
++22672.3s > serverRequest "compilation"
+["--cwd /git/haxe-libs/haxeserver","build.hxml","-D","some-compile-only-define"]
+
++22594.4s > serverRequest "@diagnostics"
+["--cwd","/git/haxe-libs/haxeserver","-D","display-details","--no-output","build.hxml","--display","/git/haxe-libs/haxeserver/Main.hx@0@diagnostics"]
++22672.3s > serverRequest "compilation"
+["--cwd /git/haxe-libs/haxeserver","build.hxml","-D","some-compile-only-define"]
+
++22594.4s > serverRequest "@diagnostics"
+["--cwd","/git/haxe-libs/haxeserver","-D","display-details","--no-output","build.hxml","--display","/git/haxe-libs/haxeserver/Main.hx@0@diagnostics"]
++22672.3s > serverRequest "compilation"
+["--cwd /git/haxe-libs/haxeserver","build.hxml","-D","some-compile-only-define"]
+
++22594.4s > serverRequest "@diagnostics"
+["--cwd","/git/haxe-libs/haxeserver","-D","display-details","--no-output","build.hxml","--display","/git/haxe-libs/haxeserver/Main.hx@0@diagnostics"]
++22672.3s > serverRequest "compilation"
+["--cwd /git/haxe-libs/haxeserver","build.hxml","-D","some-compile-only-define"]
+
+- displayResponse
++22594.4s > serverRequest "@diagnostics"
+["--cwd","/git/haxe-libs/haxeserver","-D","display-details","--no-output","build.hxml","--display","/git/haxe-libs/haxeserver/Main.hx@0@diagnostics"]
+
+- displayResponse
++22672.3s > serverRequest "compilation"
+["--cwd /git/haxe-libs/haxeserver","build.hxml","-D","some-compile-only-define"]
+
+- displayResponse
++22594.4s > serverRequest "@diagnostics"
+["--cwd","/git/haxe-libs/haxeserver","-D","display-details","--no-output","build.hxml","--display","/git/haxe-libs/haxeserver/Main.hx@0@diagnostics"]
+
+- displayResponse
++22672.3s > serverRequest "compilation"
+["--cwd /git/haxe-libs/haxeserver","build.hxml","-D","some-compile-only-define"]
+
+- displayResponse
++22594.4s > serverRequest "@diagnostics"
+["--cwd","/git/haxe-libs/haxeserver","-D","display-details","--no-output","build.hxml","--display","/git/haxe-libs/haxeserver/Main.hx@0@diagnostics"]
+
+- displayResponse
++22672.3s > serverRequest "compilation"
+["--cwd /git/haxe-libs/haxeserver","build.hxml","-D","some-compile-only-define"]
+
+- displayResponse
++22594.4s > serverRequest "@diagnostics"
+["--cwd","/git/haxe-libs/haxeserver","-D","display-details","--no-output","build.hxml","--display","/git/haxe-libs/haxeserver/Main.hx@0@diagnostics"]
+
+- displayResponse
++22672.3s > serverRequest "compilation"
+["--cwd /git/haxe-libs/haxeserver","build.hxml","-D","some-compile-only-define"]
