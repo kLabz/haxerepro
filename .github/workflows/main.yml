@@ -36,6 +36,8 @@ jobs:
           node ../../bin/replay.js --path recording --file repro-2.log
 
       - name: Repro stackoverflow
+        # This repro only reproduces on nightlies
+        if: ${{ matrix.haxe == 'latest' }}
         run: |
           cd projects/stackoverflow
           git clone --recursive -b poc/repro-tool https://github.com/kLabz/haxeserver.git
