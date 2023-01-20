@@ -3340,12 +3340,29 @@
 +50841.4s > serverRequest "compilation"
 ["--cwd /git/haxe-libs/haxeserver","repro.hxml","-D","some-compile-only-define"]
 
+- assert output
+<<EOF
+[{"file":null,"diagnostics":[{"kind":2,"severity":1,"range":null,"args":"(unknown) : Uncaught exception Stack overflow"}]}]
+EOF
+
 - displayResponse
 +50830.7s > serverRequest "@diagnostics"
 ["--cwd","/git/haxe-libs/haxeserver","-D","display-details","--no-output","repro.hxml","--display","/git/haxe-libs/haxeserver/src/haxeserver/repro/HaxeRepro.hx@0@diagnostics"]
+
+- assert output
+<<EOF
+[{"file":null,"diagnostics":[{"kind":2,"severity":1,"range":null,"args":"(unknown) : Uncaught exception Cannot call null\n(unknown) : Called from here"}]}]
+EOF
+
 - displayResponse
 +50830.7s > serverRequest "@diagnostics"
 ["--cwd","/git/haxe-libs/haxeserver","-D","display-details","--no-output","repro.hxml","--display","/git/haxe-libs/haxeserver/src/haxeserver/repro/HaxeRepro.hx@0@diagnostics"]
+
+- assert output
+<<EOF
+(unknown) : Uncaught exception Stack overflow
+EOF
+
 - displayResponse
 +50841.4s > serverRequest "compilation"
 ["--cwd /git/haxe-libs/haxeserver","repro.hxml","-D","some-compile-only-define"]
