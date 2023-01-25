@@ -15,7 +15,7 @@ jobs:
         with:
           submodules: recursive
 
-      - uses: kLabz/setup-haxe@bb4d566a79354f25a29002f76a36bc54ead97e30
+      - uses: kLabz/setup-haxe@6c750ad16187ca792f2cdddfd8c57177205f4ecd
         with:
           haxe-version: ${{ matrix.haxe }}
 
