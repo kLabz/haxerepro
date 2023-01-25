@@ -7,7 +7,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        haxe: [4.2.5, latest]
+        haxe: [4.2.5, latest, "2023-01-12_development_7de5898"]
       fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
@@ -18,7 +18,6 @@ jobs:
       - uses: kLabz/setup-haxe@bb4d566a79354f25a29002f76a36bc54ead97e30
         with:
           haxe-version: ${{ matrix.haxe }}
-          haxe-nightly: ${{ matrix.haxe == 'latest' }}
 
       - run: haxe -version
       - run: haxelib install --always install.hxml
