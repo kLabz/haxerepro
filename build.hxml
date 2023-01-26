@@ -15,8 +15,8 @@
 -lib language-server-protocol
 -lib vscode-json-rpc
 
--D haxeserver.repro.displayrequests_wait
--D haxeserver.repro.displayrequests_delay=100
+-D haxerepro.displayrequests_wait
+-D haxerepro.displayrequests_delay=100
 
 -main haxeserver.repro.ReplayRecording
 --js bin/replay.js

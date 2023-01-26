@@ -787,9 +787,9 @@ class ReplayRecording {
 				// TODO: make sure we use the actual display request order
 				// (including overlapping requests if any) instead of these
 				// compilation flags
-				#if haxeserver.displayrequests_wait
-					#if haxeserver.displayrequests_delay
-					haxe.Timer.delay(next, Std.parseInt(haxe.macro.Compiler.getDefine("haxeserver.displayrequests_delay")));
+				#if haxerepro.displayrequests_wait
+					#if haxerepro.displayrequests_delay
+					haxe.Timer.delay(next, Std.parseInt(haxe.macro.Compiler.getDefine("haxerepro.displayrequests_delay")));
 					#else
 					next();
 					#end
@@ -799,9 +799,9 @@ class ReplayRecording {
 		);
 
 		// Continue immediately?
-		#if !haxeserver.displayrequests_wait
-			#if haxeserver.displayrequests_delay
-			haxe.Timer.delay(next, Std.parseInt(haxe.macro.Compiler.getDefine("haxeserver.displayrequests_delay")));
+		#if !haxerepro.displayrequests_wait
+			#if haxerepro.displayrequests_delay
+			haxe.Timer.delay(next, Std.parseInt(haxe.macro.Compiler.getDefine("haxerepro.displayrequests_delay")));
 			#else
 			next();
 			#end
