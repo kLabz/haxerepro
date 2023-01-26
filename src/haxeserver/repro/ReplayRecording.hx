@@ -30,13 +30,17 @@ class ReplayRecording {
 	static inline var REPRO_PATCHFILE = 'status.patch';
 	static inline var UNTRACKED_DIR:String = "untracked";
 	static inline var NEWFILES_DIR:String = "newfiles";
+	static inline var STASH_NAME:String = "Stash before replay";
 
 	// Recording configuration
 	var root:String = "./";
 	var userConfig:UserConfig;
 	var displayServer:DisplayServerConfig;
 	var displayArguments:Array<String>;
-	var gitRef:String;
+
+	// VCS data
+	var vcsStatus:VcsStatus = None;
+	var createdStash:Bool = false;
 
 	// Replay configuration
 	var path:String;
@@ -47,7 +51,6 @@ class ReplayRecording {
 
 	// Replay state
 	var lineNumber:Int = 0;
-	var gitStash:Bool = false;
 	var muted:Bool = false;
 	var stepping:Bool = false;
 	var abortOnFailure:Bool = false;
@@ -281,6 +284,14 @@ class ReplayRecording {
 							println('$l: > Add untracked files');
 							addGitUntracked(next);
 
+						case CheckoutSvnRevision:
+							println('$l: > Checkout svn revision');
+							checkoutSvnRevision(nextLine(), next);
+
+						case ApplySvnPatch:
+							println('$l: > Apply svn patch');
+							applySvnPatch(next);
+
 						// Direct communication between client and server
 
 						case ServerRequest:
@@ -444,7 +455,13 @@ class ReplayRecording {
 
 	function cleanup():Void {
 		file.close();
-		resetGit();
+
+		switch (vcsStatus) {
+			case GitReference(ref): resetGit(ref);
+			case SvnRevision(rev): resetSvn(rev);
+			case None:
+		}
+
 		// No need to close the client, it's not stateful
 		if (server != null) server.kill();
 	}
@@ -500,12 +517,13 @@ class ReplayRecording {
 	}
 
 	function checkoutGitRef(ref:String, next:Void->Void):Void {
-		gitRef = git("rev-parse", "--abbrev-ref", "HEAD");
+		var gitRef = git("rev-parse", "--abbrev-ref", "HEAD");
 		if (gitRef == "HEAD") gitRef = git("rev-parse", "--short", "HEAD");
+		vcsStatus = GitReference(gitRef);
 
 		if (git("status", "--porcelain").trim() != "") {
-			gitStash = true;
-			git("stash", "save", "--include-untracked", "Stash before replay");
+			createdStash = true;
+			git("stash", "save", "--include-untracked", STASH_NAME);
 		}
 
 		git("checkout", ref);
@@ -543,12 +561,45 @@ class ReplayRecording {
 		next();
 	}
 
-	function resetGit():Void {
-		if (gitRef == null) return;
+	function resetGit(ref:String):Void {
 		git("clean", "-f", "-d");
 		git("reset", "--hard");
-		git("checkout", gitRef);
-		if (gitStash) git("stash", "pop");
+		git("checkout", ref);
+		if (createdStash) git("stash", "pop");
+	}
+
+	function svn(args:Rest<String>):String {
+		var proc = ChildProcess.spawnSync("svn", args.toArray(), {env: {
+			SVN_EXPERIMENTAL_COMMANDS: "shelf3"
+		}});
+
+		if (proc.status > 0) throw (proc.stderr:Buffer).toString().trim();
+		return (proc.stdout:Buffer).toString().trim();
+	}
+
+	function checkoutSvnRevision(revision:String, next:Void->Void):Void {
+		var revision = svn("info", "--show-item", "revision");
+		vcsStatus = SvnRevision(revision);
+
+		if (svn("status") != "") {
+			createdStash = true;
+			svn("x-shelve", STASH_NAME);
+		}
+
+		svn("update", "-r", revision);
+		next();
+	}
+
+	function applySvnPatch(next:Void->Void):Void {
+		svn("patch", "--strip=0", Path.join([path, REPRO_PATCHFILE]));
+		next();
+	}
+
+	function resetSvn(revision:String):Void {
+		svn("revert", "-R", ".");
+		svn("cleanup", "--remove-unversioned");
+		svn("update", "-r", revision);
+		if (createdStash) svn("x-unshelve", "--drop", STASH_NAME);
 	}
 
 	function maybeConvertPath(a:String):String {
@@ -702,6 +753,7 @@ class ReplayRecording {
 											println('$l: => Server response: $hasError', true);
 										}
 
+										// if (displayNextResponse) println(Json.stringify(res, "  "), true);
 										if (displayNextResponse) println(Std.string(res), true);
 								}
 
@@ -824,4 +876,10 @@ enum ResponseKind<T:{}> {
 	JsonResult(json:Response<T>);
 	Raw(out:String);
 	Empty;
+}
+
+enum VcsStatus {
+	GitReference(ref:String);
+	SvnRevision(rev:String);
+	None;
 }

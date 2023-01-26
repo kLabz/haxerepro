@@ -9,6 +9,8 @@ enum abstract RecordingEntry(String) {
 	var CheckoutGitRef = "checkoutGitRef";
 	var ApplyGitPatch = "applyGitPatch";
 	var AddGitUntracked = "addGitUntracked";
+	var CheckoutSvnRevision = "checkoutSvnRevision";
+	var ApplySvnPatch = "applySvnPatch";
 
 	// Direct communication between client and server
 	var ServerRequest = "serverRequest";
