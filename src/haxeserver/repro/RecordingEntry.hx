@@ -28,6 +28,7 @@ enum abstract RecordingEntry(String) {
 	var DisplayResponse = "displayResponse";
 	var Abort = "abort";
 	var AbortOnFailure = "abortOnFailure";
+	var ShellCommand = "shell";
 
 	// Editor events
 	var DidChangeTextDocument = "didChangeTextDocument";

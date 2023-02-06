@@ -411,6 +411,11 @@ class ReplayRecording {
 							println('$l: ${extractor.method}');
 							next();
 
+						case ShellCommand:
+							var cmd = nextLine();
+							println('$l: shell cmd `$cmd`');
+							shellCommand(cmd, next);
+
 						case entry:
 							println('$l: Unhandled entry: $entry');
 							exit(1);
@@ -814,6 +819,20 @@ class ReplayRecording {
 		// 	trace('serverResponse #$id: "$request"');
 		// 	next(Success);
 		// });
+	}
+
+	// TODO: add support for assertions
+	function shellCommand(cmd:String, cb:Void->Void):Void {
+		var proc = ChildProcess.spawnSync(cmd);
+		if (proc.status > 0) {
+			var buf:Buffer = proc.stderr;
+			if (buf != null) Sys.println(buf.toString().trim());
+		}
+
+		var buf:Buffer = proc.stdout;
+		if (buf != null) Sys.println(buf.toString().trim());
+
+		cb();
 	}
 
 	function extractResult<T:{}>(out:String):ResponseKind<T> {
