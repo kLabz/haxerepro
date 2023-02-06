@@ -264,6 +264,11 @@ class ReplayRecording {
 							next();
 
 						// TODO: actually use this
+						case ServerRecordingConfig:
+							var config = getData();
+							next();
+
+						// TODO: actually use this
 						case DisplayServer:
 							displayServer = getData();
 							next();

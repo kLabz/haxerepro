@@ -4,6 +4,7 @@ enum abstract RecordingEntry(String) {
 	// Initialization
 	var Root = "root";
 	var UserConfig = "userConfig";
+	var ServerRecordingConfig = "serverRecordingConfig";
 	var DisplayServer = "displayServer";
 	var DisplayArguments = "displayArguments";
 	var CheckoutGitRef = "checkoutGitRef";
