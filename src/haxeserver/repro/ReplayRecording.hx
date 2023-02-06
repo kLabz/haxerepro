@@ -256,7 +256,7 @@ class ReplayRecording {
 						// Initialization
 
 						case Root:
-							root = extractor.method;
+							root = Path.normalize(extractor.method);
 							next();
 
 						case UserConfig:
@@ -612,8 +612,12 @@ class ReplayRecording {
 		if (createdStash) svn("x-unshelve", "--drop", STASH_NAME);
 	}
 
-	function maybeConvertPath(a:String):String {
-		if (a.charCodeAt(0) == "/".code) {
+	function maybeConvertPath(b:String):String {
+		// TODO: clean that up.. also support non-C drive letters for windows
+		var a = b.split("\\").join("/");
+		if (a.startsWith("C:/")) a = "c" + a.substr(1);
+
+		if (a.charCodeAt(0) == "/".code || a.startsWith("c:/")) {
 			if (a.startsWith(root)) {
 				a = a.substr(root.length);
 				if (a.charCodeAt(0) == '/'.code) a = a.substr(1);
@@ -623,7 +627,7 @@ class ReplayRecording {
 			throw 'Absolute path outside root not handled yet ($a)';
 		}
 
-		if (a.startsWith("--cwd /")) {
+		if (a.startsWith("--cwd /") || a.startsWith("--cwd c:/")) {
 			if (a.startsWith("--cwd " + root)) {
 				a = a.substr("--cwd ".length + root.length);
 				if (a.charCodeAt(0) == '/'.code) a = a.substr(1);
@@ -645,7 +649,7 @@ class ReplayRecording {
 			}
 		} catch (_) {}
 
-		return a;
+		return b;
 	}
 
 	function serverJsonRequest(
