@@ -30,7 +30,7 @@ the `vscode:prepublish` npm script from `package.json`, like vshaxe-build does.
 
 ```
 npx vsce package
-code --install-extension vshaxe-2.25.0.vsix
+code --install-extension vshaxe-2.26.0.vsix
 ```
 
 ## Usage with any LSP compatible editor
@@ -47,16 +47,38 @@ You can then use this version as your haxe LSP server in your editor.
 
 ## Configuration
 
-To enable server recording, set `haxe.enableServerRecording` setting to `true`.
-By default, it will save recordings in `.haxelsp/recording/` in your workspace.
-You can change that with the `haxe.serverRecordingPath`.
+To enable server recording, add `haxe.serverRecording` object to your editor
+and/or workspace configuration:
 
-Changes will apply after you restart your haxe LSP server. You should then see a
-`.haxelsp/recording/current/` folder with at least a `repro.log` file containing
+```json
+"haxe.serverRecording": {
+  "enabled": true,
+  "path": ".haxelsp/recording/",
+  "watch": [],
+  "exclude": [],
+  "excludeUntracked": false
+}
+```
+
+Where:
+ * `enabled` should be set to `true` when you want to record
+ * `path` is where recording data will be stored, relative to your workspace root
+ * `watch` is an array of paths (`String`) to watch for changes during
+   recording. Put any (text) resource influencing compilation that is likely to
+   change during your coding session in there.
+ * `exclude` is currently used to ignore changes in paths:
+	 * for `git` diffs (including of untracked files), as a git ignore pattern
+	 * for `svn` untracked files, without support for wildcards
+ * `excludeUntracked` will ignore untracked (including non-ignored untracked
+   files) from diffs stored in the recording.
+
+Changes will apply after you restart your haxe LSP server (on vscode, it should
+happen automatically when you save your workspace settings). You should then see
+a `.haxelsp/recording/current/` folder with at least a `repro.log` file containing
 the recordings.
 
-Each time you restart yoru LSP server, that `current` directory will be wiped
-and replaced with a new recording. You can save current recording before
+Each time you restart your LSP server, that `current` directory will be wiped
+and replaced with a new recording. You can save current recording **before**
 restarting language server if something interesting happened by launching the
 `"Haxe: Export current recording"` command via the command palette.
 
