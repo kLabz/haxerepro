@@ -45,6 +45,7 @@ class ReplayRecording {
 	// Replay configuration
 	var path:String;
 	var silent:Bool = false;
+	var noInteractive:Bool = false;
 	var logTimes:Bool = false;
 	var port:Int = 7000;
 	var filename:String = "repro.log";
@@ -83,6 +84,8 @@ class ReplayRecording {
 			["--file"] => f -> filename = f,
 			@doc("Port to use internally for haxe server. Should *not* refer to an existing server. Default is `7000`.")
 			["--port"] => p -> port = p,
+			@doc("Skip all prompts.")
+			["--no-interactive"] => () -> noInteractive = true,
 			@doc("Only show results.")
 			["--silent"] => () -> silent = true,
 			@doc("Log timing per request type.")
@@ -127,7 +130,7 @@ class ReplayRecording {
 	}
 
 	function pause(resume:Void->Void, ?msg:String = "Paused. Press <ENTER> to resume."):Void {
-		if (aborted) resume();
+		if (aborted || noInteractive) resume();
 		Sys.print(msg);
 		Sys.stdin().readLine();
 		resume();
