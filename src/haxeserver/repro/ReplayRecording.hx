@@ -117,24 +117,23 @@ class ReplayRecording {
 		next();
 	}
 
-	function start(done:Void->Void):Void {
+	function start(cb:Void->Void):Void {
 		server = ChildProcess.spawn("haxe", ["--wait", Std.string(port)]);
 		Sys.sleep(0.5);
 
 		var process = new HaxeServerProcessConnect("haxe", port, []);
 		client = new HaxeServerAsync(() -> process);
-		done();
+		cb();
 	}
 
-	function pause(resume:Void->Void):Void {
+	function pause(resume:Void->Void, ?msg:String = "Paused. Press <ENTER> to resume."):Void {
 		if (aborted) resume();
-		Sys.print("Paused. Press <ENTER> to resume.");
+		Sys.print(msg);
 		Sys.stdin().readLine();
 		resume();
 	}
 
 	function done():Void {
-		cleanup();
 		var exitCode = 0;
 
 		if (assertions.iterator().hasNext()) {
@@ -158,8 +157,6 @@ class ReplayRecording {
 			Sys.println('');
 			if (!silent) Sys.println(detailed.toString());
 			if (nbFail > 0) exitCode = 1;
-		} else {
-			Sys.println('Done.');
 		}
 
 		if (logTimes) {
@@ -207,7 +204,10 @@ class ReplayRecording {
 			Sys.println(buf.toString());
 		}
 
-		Sys.exit(exitCode);
+		pause(() -> {
+			cleanup();
+			Sys.exit(exitCode);
+		}, "Done. Press <ENTER> to cleanup and exit.");
 	}
 
 	function next() {
