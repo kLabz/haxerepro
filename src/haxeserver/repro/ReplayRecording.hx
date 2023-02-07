@@ -29,7 +29,7 @@ using haxeserver.repro.ReplayRecording;
 class ReplayRecording {
 	static inline var REPRO_PATCHFILE = 'status.patch';
 	static inline var UNTRACKED_DIR:String = "untracked";
-	static inline var NEWFILES_DIR:String = "newfiles";
+	static inline var FILE_CONTENTS_DIR:String = "files";
 	static inline var STASH_NAME:String = "Stash before replay";
 
 	// Recording configuration
@@ -356,27 +356,35 @@ class ReplayRecording {
 						// Editor events
 
 						case DidChangeTextDocument:
-							var start = Date.now().getTime();
+							// var start = Date.now().getTime();
 							var event:DidChangeTextDocumentParams = getData();
-							println('$l: Apply document change to ${event.textDocument.uri.toFsPath().toString()}');
-							didChangeTextDocument(event, next);
-							if (logTimes) logTime("didChangeTextDocument", Date.now().getTime() - start);
+							println('$l: Skip document change event for ${event.textDocument.uri.toFsPath().toString()}');
+							// println('$l: Apply document change to ${event.textDocument.uri.toFsPath().toString()}');
+							// didChangeTextDocument(event, next);
+							// if (logTimes) logTime("didChangeTextDocument", Date.now().getTime() - start);
+							next();
 
 						case FileCreated:
 							var id = extractor.id;
-							var event:FileEvent = getData();
 							var content = id == 0
 								? ""
-								: File.getContent(Path.join([path, NEWFILES_DIR, '$id.contents']));
+								: File.getContent(Path.join([path, FILE_CONTENTS_DIR, '$id.contents']));
 
-							var path = maybeConvertPath(event.uri.toFsPath().toString());
+							var path = maybeConvertPath(getData());
+							FileSystem.createDirectory(Path.directory(path));
+							File.saveContent(path, content);
+							next();
+
+						case FileChanged:
+							var id = extractor.id;
+							var content = File.getContent(Path.join([path, FILE_CONTENTS_DIR, '$id.contents']));
+							var path = maybeConvertPath(getData());
 							FileSystem.createDirectory(Path.directory(path));
 							File.saveContent(path, content);
 							next();
 
 						case FileDeleted:
-							var event:FileEvent = getData();
-							var path = maybeConvertPath(event.uri.toFsPath().toString());
+							var path = maybeConvertPath(getData());
 							FileSystem.deleteFile(path);
 							next();
 

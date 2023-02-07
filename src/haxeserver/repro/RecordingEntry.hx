@@ -35,4 +35,5 @@ enum abstract RecordingEntry(String) {
 	var DidChangeTextDocument = "didChangeTextDocument";
 	var FileCreated = "fileCreated";
 	var FileDeleted = "fileDeleted";
+	var FileChanged = "fileChanged";
 }
