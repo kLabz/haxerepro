@@ -26,6 +26,7 @@ class ReduceRecording {
 	var keepInvalidate:Bool = false;
 	var keepCompletion:Bool = true;
 	var keepDiagnostics:Bool = true;
+	var keepDidChangeTextDocument:Bool = false;
 	var keepCompletionItemResolve:Bool = false;
 
 	// State
@@ -52,6 +53,8 @@ class ReduceRecording {
 			["--file-out"] => f -> filename_out = f,
 			@doc("Skip all non-essential lines before this one.")
 			["--skip-until"] => s -> skipUntil = s,
+			@doc("Do not remove didChangeTextDocument events.")
+			["--keep-did-change-text-document"] => () -> keepDidChangeTextDocument = true,
 			@doc("Do not try to optimize 'server/invalidate' requests.")
 			["--keep-server-invalidate"] => () -> keepInvalidate = true,
 			@doc("Do not remove 'display/completionItem/resolve' requests.")
@@ -139,13 +142,13 @@ class ReduceRecording {
 
 						// Initialization
 
-						case UserConfig | DisplayServer | DisplayArguments | CheckoutGitRef:
+						case UserConfig | DisplayServer | DisplayArguments | ServerRecordingConfig | CheckoutGitRef | CheckoutSvnRevision:
 							addLine(line);
 							getLine(true);
 							next();
 
 
-						case Root | ApplyGitPatch | AddGitUntracked:
+						case Root | ApplyGitPatch | AddGitUntracked | ApplySvnPatch:
 							addLine(line);
 							next();
 
@@ -200,20 +203,29 @@ class ReduceRecording {
 
 						// Editor events
 
+						case DidChangeTextDocument if (!keepDidChangeTextDocument):
+							next();
+
 						// TODO: if we're currently skipping (from beginning of
 						// recording), apply all file events and update
 						// stash/untracked at the end of skipped section to
 						// replace file events.
-						case DidChangeTextDocument | FileCreated | FileDeleted:
+						case DidChangeTextDocument | FileCreated | FileDeleted | FileChanged:
 							addLine(line);
 							getLine(true);
 							next();
 
 						// Commands
 
-						// We shouldn't really add commands before reducing
-						case Start | Pause | Abort | AbortOnFailure | StepByStep | DisplayResponse | Echo:
+						// We shouldn't really add commands before reducingg
+						case Start | Pause | Abort | AbortOnFailure | StepByStep | DisplayResponse | Echo | Mute:
 							addLine(line);
+							next();
+
+						// We shouldn't really add commands before reducingg
+						case ShellCommand:
+							addLine(line);
+							getLine(true);
 							next();
 
 						case entry:
