@@ -23,7 +23,7 @@ jobs:
       - run: haxelib install --always install.hxml
 
       - name: Compile tools
-        run: haxe build.hxml
+        run: haxe build-all.hxml
 
       - name: Repro xredefined
         # This repro only reproduces on nightlies

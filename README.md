@@ -14,7 +14,14 @@ haxelib install --always install.hxml
 You can then build `bin/replay.js` and `bin/reduce.js` tools with:
 
 ```sh
-haxe build.hxml
+haxe build-all.hxml
+```
+
+Or build tools individually with either:
+
+```sh
+haxe build-reduce.hxml
+haxe build-replay.hxml
 ```
 
 ## Using the replay tool

@@ -9,9 +9,6 @@
 
 -D analyzer-optimize
 
---each
-
--cp haxeserver/haxe-lsp/src
 -lib language-server-protocol
 -lib vscode-json-rpc
 
@@ -20,8 +17,3 @@
 
 -main haxeserver.repro.ReplayRecording
 --js bin/replay.js
-
---next
-
--main haxeserver.repro.ReduceRecording
---js bin/reduce.js
