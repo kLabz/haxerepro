@@ -20,7 +20,6 @@ import haxeLanguageServer.DisplayServerConfig;
 import haxeLanguageServer.documents.HxTextDocument;
 import haxeserver.process.HaxeServerProcessConnect;
 import languageServerProtocol.protocol.Protocol.DidChangeTextDocumentParams;
-import languageServerProtocol.protocol.Protocol.FileEvent;
 
 using StringTools;
 using haxeLanguageServer.extensions.DocumentUriExtensions;
@@ -34,6 +33,7 @@ class ReplayRecording {
 
 	// Recording configuration
 	var root:String = "./";
+	var config:ServerRecordingConfig;
 	var userConfig:UserConfig;
 	var displayServer:DisplayServerConfig;
 	var displayArguments:Array<String>;
@@ -263,9 +263,8 @@ class ReplayRecording {
 							userConfig = getData();
 							next();
 
-						// TODO: actually use this
 						case ServerRecordingConfig:
-							var config = getData();
+							config = getData();
 							next();
 
 						// TODO: actually use this
