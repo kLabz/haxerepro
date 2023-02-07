@@ -580,6 +580,8 @@ class ReplayRecording {
 	}
 
 	function resetGit(ref:String):Void {
+		// TODO: store those steps somewhere so they can be executed manually
+		// even after a crash or an interruption
 		git("clean", "-f", "-d");
 		git("reset", "--hard");
 		git("checkout", ref);
@@ -587,17 +589,21 @@ class ReplayRecording {
 	}
 
 	function svn(args:Rest<String>):String {
-		var proc = ChildProcess.spawnSync("svn", args.toArray(), {env: {
-			SVN_EXPERIMENTAL_COMMANDS: "shelf3"
-		}});
+		var args = args.toArray();
+		var shelf = args[0].startsWith('x-');
+		var proc = ChildProcess.spawnSync(
+			"svn",
+			args,
+			shelf ? {env: {SVN_EXPERIMENTAL_COMMANDS: "shelf3"}} : {}
+		);
 
 		if (proc.status > 0) throw (proc.stderr:Buffer).toString().trim();
 		return (proc.stdout:Buffer).toString().trim();
 	}
 
 	function checkoutSvnRevision(revision:String, next:Void->Void):Void {
-		var revision = svn("info", "--show-item", "revision");
-		vcsStatus = SvnRevision(revision);
+		var prevRevision = svn("info", "--show-item", "revision");
+		vcsStatus = SvnRevision(prevRevision);
 
 		if (svn("status") != "") {
 			createdStash = true;
@@ -614,6 +620,8 @@ class ReplayRecording {
 	}
 
 	function resetSvn(revision:String):Void {
+		// TODO: store those steps somewhere so they can be executed manually
+		// even after a crash or an interruption
 		svn("revert", "-R", ".");
 		svn("cleanup", "--remove-unversioned");
 		svn("update", "-r", revision);
