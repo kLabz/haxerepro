@@ -51,6 +51,7 @@ class ReplayRecording {
 	var filename:String = "repro.log";
 
 	// Replay state
+	var protocolVersion:Float = 0.0;
 	var lineNumber:Int = 0;
 	var muted:Bool = false;
 	var stepping:Bool = false;
@@ -268,6 +269,7 @@ class ReplayRecording {
 
 						case ServerRecordingConfig:
 							config = getData();
+							if (config.version != null) protocolVersion = config.version;
 							next();
 
 						// TODO: actually use this
@@ -323,6 +325,15 @@ class ReplayRecording {
 								next();
 							}
 
+						case ServerRequestQueued:
+							// Nothing to do?
+							next();
+
+						case ServerRequestCancelled:
+							// Nothing to do?
+							nextLine();
+							next();
+
 						case ServerResponse:
 							// var id = extractor.id;
 							// var method = extractor.method;
@@ -358,13 +369,17 @@ class ReplayRecording {
 						// Editor events
 
 						case DidChangeTextDocument:
-							// var start = Date.now().getTime();
 							var event:DidChangeTextDocumentParams = getData();
-							println('$l: Skip document change event for ${event.textDocument.uri.toFsPath().toString()}');
-							// println('$l: Apply document change to ${event.textDocument.uri.toFsPath().toString()}');
-							// didChangeTextDocument(event, next);
-							// if (logTimes) logTime("didChangeTextDocument", Date.now().getTime() - start);
-							next();
+
+							if (protocolVersion < 1.1) {
+								var start = Date.now().getTime();
+								println('$l: Apply document change to ${event.textDocument.uri.toFsPath().toString()}');
+								didChangeTextDocument(event, next);
+								if (logTimes) logTime("didChangeTextDocument", Date.now().getTime() - start);
+							} else {
+								println('$l: Skipped document change event for ${event.textDocument.uri.toFsPath().toString()}');
+								next();
+							}
 
 						case FileCreated:
 							var id = extractor.id;
@@ -928,4 +943,8 @@ enum VcsStatus {
 	GitReference(ref:String);
 	SvnRevision(rev:String);
 	None;
+}
+
+typedef ServerRecordingConfig = haxeLanguageServer.Configuration.ServerRecordingConfig & {
+	@:optional var version:Float;
 }

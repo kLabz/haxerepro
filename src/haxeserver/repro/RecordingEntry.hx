@@ -15,6 +15,8 @@ enum abstract RecordingEntry(String) {
 
 	// Direct communication between client and server
 	var ServerRequest = "serverRequest";
+	var ServerRequestQueued = "serverRequestQueued";
+	var ServerRequestCancelled = "serverRequestCancelled";
 	var ServerResponse = "serverResponse";
 	var ServerError = "serverError";
 	var CompilationResult = "compilationResult";
