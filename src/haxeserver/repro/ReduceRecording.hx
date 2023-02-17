@@ -193,6 +193,13 @@ class ReduceRecording {
 
 							next();
 
+						case ServerRequestQueued:
+							next();
+
+						case ServerRequestCancelled:
+							nextLine(false);
+							next();
+
 						case ServerResponse:
 							nextLine(false);
 							next();
