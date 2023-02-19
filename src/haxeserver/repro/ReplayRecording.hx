@@ -358,9 +358,9 @@ class ReplayRecording {
 							getFileContent();
 							next();
 
-						case CompilationResult:
+						case CompilationResult | CompilationError:
 							// Disabled printing for now as it can be confused with actual result from replay...
-							// var fail = extractor.method == "" ? "ok" : "failed";
+							// var fail = (extractor.entry.match(CompilationError) || extractor.method == "failed") ? "failed" : "ok";
 							// println('$l: < Compilation result: $fail');
 							// TODO: check against actual result
 							getFileContent();

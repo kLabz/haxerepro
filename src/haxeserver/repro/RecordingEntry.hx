@@ -20,6 +20,7 @@ enum abstract RecordingEntry(String) {
 	var ServerResponse = "serverResponse";
 	var ServerError = "serverError";
 	var CompilationResult = "compilationResult";
+	var CompilationError = "compilationError";
 
 	// Commands
 	var Assert = "assert";

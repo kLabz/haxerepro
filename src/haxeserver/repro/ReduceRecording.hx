@@ -204,7 +204,7 @@ class ReduceRecording {
 							nextLine(false);
 							next();
 
-						case ServerError | CompilationResult:
+						case ServerError | CompilationResult | CompilationError:
 							getFileContent(false);
 							next();
 
