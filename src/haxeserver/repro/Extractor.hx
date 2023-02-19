@@ -1,6 +1,6 @@
 package haxeserver.repro;
 
-import haxeLanguageServer.ComDirection;
+import haxeLanguageServer.ServerRecordingEntryKind;
 
 @:forward(match)
 abstract Extractor(EReg) from EReg {
@@ -17,8 +17,8 @@ abstract Extractor(EReg) from EReg {
 		return Std.parseFloat(raw);
 	}
 
-	public var direction(get, never):ComDirection;
-	function get_direction():ComDirection return cast this.matched(2);
+	public var kind(get, never):ServerRecordingEntryKind;
+	function get_kind():ServerRecordingEntryKind return cast this.matched(2);
 
 	public var entry(get, never):RecordingEntry;
 	function get_entry():RecordingEntry return cast this.matched(3);

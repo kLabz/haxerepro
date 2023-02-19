@@ -130,7 +130,7 @@ class ReduceRecording {
 
 					switch (extractor.entry) {
 						// Comment with timings
-						case _ if (extractor.direction == Ignored):
+						case _ if (extractor.kind == Comment):
 							if (!skipping) addLine(line);
 							next();
 

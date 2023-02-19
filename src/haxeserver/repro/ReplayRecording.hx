@@ -231,7 +231,7 @@ class ReplayRecording {
 
 					switch (extractor.entry) {
 						// Comment with timings
-						case _ if (extractor.direction == Ignored):
+						case _ if (extractor.kind == Comment):
 							return next();
 
 						// Assertions
