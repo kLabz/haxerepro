@@ -46,6 +46,7 @@ class ReplayRecording {
 	var path:String;
 	var silent:Bool = false;
 	var noInteractive:Bool = false;
+	var noWatchers:Bool = false;
 	var logTimes:Bool = false;
 	var port:Int = 7000;
 	var filename:String = "repro.log";
@@ -85,6 +86,8 @@ class ReplayRecording {
 			["--file"] => f -> filename = f,
 			@doc("Port to use internally for haxe server. Should *not* refer to an existing server. Default is `7000`.")
 			["--port"] => p -> port = p,
+			@doc("This recording was made without filesystem watchers.")
+			["--no-watchers"] => () -> noWatchers = true,
 			@doc("Skip all prompts.")
 			["--no-interactive"] => () -> noInteractive = true,
 			@doc("Only show results.")
@@ -371,7 +374,7 @@ class ReplayRecording {
 						case DidChangeTextDocument:
 							var event:DidChangeTextDocumentParams = getData();
 
-							if (protocolVersion < 1.1) {
+							if (protocolVersion < 1.1 || noWatchers) {
 								var start = Date.now().getTime();
 								println('$l: Apply document change to ${event.textDocument.uri.toFsPath().toString()}');
 								didChangeTextDocument(event, next);
