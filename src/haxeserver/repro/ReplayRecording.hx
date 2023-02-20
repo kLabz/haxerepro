@@ -19,6 +19,8 @@ import haxeLanguageServer.Configuration;
 import haxeLanguageServer.DisplayServerConfig;
 import haxeLanguageServer.documents.HxTextDocument;
 import haxeserver.process.HaxeServerProcessConnect;
+import haxeserver.repro.Utils.shellCommand;
+import haxeserver.repro.Utils.printTimer;
 import languageServerProtocol.protocol.Protocol.DidChangeTextDocumentParams;
 
 using StringTools;
@@ -60,7 +62,9 @@ class ReplayRecording {
 	var displayNextResponse:Bool = false;
 	var currentAssert:Assertion = None;
 	var assertions = new Map<Int, AssertionItem>();
-	var times = new Map<String, {count:Int, total:Float}>();
+
+	var times = new Map<String, Timings>();
+	var timers = new Map<String, Array<{line:Int, timer:Timer}>>();
 
 	/**
 	 * When `abortOnFailure` hit a failure;
@@ -167,48 +171,49 @@ class ReplayRecording {
 		}
 
 		if (logTimes) {
-			var buf = new StringBuf();
-			buf.add('\n');
+			displayTimingsTable("Replay timings:", times);
 
-			var pad = 2;
-			var cols = ["Timings:", "Count", "Total (s)", "Average (s)"];
-			var colSize = cols.map(s -> s.length);
+			// TODO: allow user to change through some argument
+			var reportMode:TimersReporting = Aggregate;
+			// var reportMode:TimersReporting = Details('display/completion');
+			switch (reportMode) {
+				case None:
 
-			var times = [for (k => v in times) {
-				if (k.length > colSize[0]) colSize[0] = k.length;
+				case Aggregate:
+					displayTimingsTable("Haxe timers:", [for (r => data in timers) {
+						var timings = Lambda.fold(
+							data,
+							(item, res) -> {
+								total: res.total + (item.timer.time * 1000),
+								count: res.count + 1,
+								max: Math.max(Math.ceil(item.timer.time * 1000), res.max)
+							},
+							{total: 0, count: 0, max: 0}
+						);
 
-				var countStr = Std.string(v.count);
-				if (countStr.length > colSize[1]) colSize[1] = countStr.length;
+						if (timings.total == 0) continue;
+						r => timings;
+					}]);
 
-				var totalStr = Std.string(Math.round(v.total / 10) / 100);
-				if (totalStr.length > colSize[2]) colSize[2] = totalStr.length;
+				case Details(request):
+					var buf = new StringBuf();
+					buf.add('\nHaxe timers:\n');
+					for (_ in 0...20) buf.add('-');
 
-				var avg = Math.round((v.total / v.count) / 10) / 100;
-				k => {count: countStr, total: totalStr, avg: avg};
-			}];
+					for (r => data in timers) {
+						if (request != null && request != r) continue;
 
-			var len = 0;
-			for (i => c in cols) {
-				len += colSize[i] + pad;
-				buf.add(c);
-				if (i < colSize.length) for (_ in 0...(colSize[i]-c.length+pad)) buf.add(' ');
+						for (d in data) {
+							buf.add('\nL');
+							buf.add(d.line);
+							buf.add(' - ');
+							buf.add(r);
+							printTimer(buf, d.timer, 1);
+						}
+					}
+
+					Sys.println(buf.toString());
 			}
-			buf.add('\n');
-			for (_ in 0...len) buf.add('-');
-			buf.add('\n');
-
-			for (k => v in times) {
-				buf.add(k);
-				for (_ in 0...(colSize[0]-k.length+pad)) buf.add(' ');
-				buf.add(v.count);
-				for (_ in 0...(colSize[1]-v.count.length+pad)) buf.add(' ');
-				buf.add(v.total);
-				for (_ in 0...(colSize[2]-v.total.length+pad)) buf.add(' ');
-				buf.add(v.avg);
-				buf.add('\n');
-			}
-
-			Sys.println(buf.toString());
 		}
 
 		pause(() -> {
@@ -513,6 +518,55 @@ class ReplayRecording {
 		if (!aborted && !muted && (ignoreSilent || !silent)) Sys.println(s);
 	}
 
+	function displayTimingsTable(heading:String, times:Map<String, Timings>):Void {
+		var buf = new StringBuf();
+		buf.add('\n');
+
+		var pad = 2;
+		var cols = [heading, "Count", "Total (s)", "Average (ms)", "Max (ms)"];
+		var colSize = cols.map(s -> s.length);
+
+		var times = [for (k => v in times) {
+			if (k.length > colSize[0]) colSize[0] = k.length;
+
+			var countStr = Std.string(v.count);
+			if (countStr.length > colSize[1]) colSize[1] = countStr.length;
+
+			var totalStr = Std.string(Math.round(v.total) / 1000);
+			if (totalStr.length > colSize[2]) colSize[2] = totalStr.length;
+
+			// var avg = Math.round((v.total / v.count) / 10) / 100;
+			var avgStr = Std.string(Math.round(v.total / v.count));
+
+			k => {count: countStr, total: totalStr, avg: avgStr, max: v.max};
+		}];
+
+		var len = 0;
+		for (i => c in cols) {
+			len += colSize[i] + pad;
+			buf.add(c);
+			if (i < colSize.length) for (_ in 0...(colSize[i]-c.length+pad)) buf.add(' ');
+		}
+		buf.add('\n');
+		for (_ in 0...len) buf.add('-');
+		buf.add('\n');
+
+		for (k => v in times) {
+			buf.add(k);
+			for (_ in 0...(colSize[0]-k.length+pad)) buf.add(' ');
+			buf.add(v.count);
+			for (_ in 0...(colSize[1]-v.count.length+pad)) buf.add(' ');
+			buf.add(v.total);
+			for (_ in 0...(colSize[2]-v.total.length+pad)) buf.add(' ');
+			buf.add(v.avg);
+			for (_ in 0...(colSize[3]-v.avg.length+pad)) buf.add(' ');
+			buf.add(v.max);
+			buf.add('\n');
+		}
+
+		Sys.println(buf.toString());
+	}
+
 	function getLine():String {
 		lineNumber++;
 		return file.readLine();
@@ -723,161 +777,143 @@ class ReplayRecording {
 		println('$l: > Server request$idDesc "$request"', displayNextResponse);
 
 		params = params.map(maybeConvertPath);
-		// trace(params);
 
 		client.rawRequest(
-			params,
-			res -> {
-				var hasError = res.hasError;
-				var out:String = res.stderr.toString();
-
-				switch (currentAssert) {
-					case ExpectOutput(_, expected):
-						hasError = out != expected;
-
-						if (hasError) {
-							final a = new diff.FileData(haxe.io.Bytes.ofString(expected), "expected", Date.now());
-							final b = new diff.FileData(haxe.io.Bytes.ofString(out), "actual", Date.now());
-							var ctx:diff.Context = {
-								file1: a,
-								file2: b,
-								context: 10
-							}
-							final script = diff.Analyze.diff2Files(ctx);
-							var diff = diff.Printer.printUnidiff(ctx, script);
-							diff = diff.split("\n").slice(3).join("\n");
-							println(diff, true);
-						}
-
-						assertionResult(l, !hasError);
-
-					case _:
-				}
-
-				// TODO: compare with serverResponse
-				switch (request) {
-					case "compilation":
-						if (hasError) println('$l: => Compilation error:\n' + out.trim(), true);
-						else if (displayNextResponse) println(out.trim(), true);
-
-					case _:
-						switch (extractResult(out)) {
-							case JsonResult(res):
-								switch (request) {
-									case "display/completion":
-										var res:CompletionResult = cast res.result;
-										var nbItems = try res.result.items.length catch(_) 0;
-
-										if (displayNextResponse) {
-											println('$l => Completion request returned $nbItems items', true);
-										}
-
-										switch (currentAssert) {
-											case ExpectItemCount(_, null):
-												hasError = nbItems == 0;
-												assertionResult(l, !hasError);
-
-											case ExpectItemCount(_, c):
-												hasError = c != nbItems;
-												assertionResult(l, !hasError);
-
-											case _:
-												hasError = false;
-										}
-
-										if (hasError) println('$l: => Completion request failed', true);
-
-									case "server/contexts" if (displayNextResponse):
-										var contexts:Array<HaxeServerContext> = cast res.result.result;
-										for (c in contexts) {
-											println('  ${c.index} ${c.desc} (${c.platform}, ${c.defines.length} defines)', true);
-											println('    signature: ${c.signature}', true);
-											// println('    defines: ${c.defines.map(d -> d.key).join(", ")}', true);
-										}
-
-									// TODO: other special case handling
-
-									case _:
-										if (hasError || displayNextResponse) {
-											var hasError = hasError ? "(has error)" : "";
-											println('$l: => Server response: $hasError', true);
-										}
-
-										// if (displayNextResponse) println(Json.stringify(res, "  "), true);
-										if (displayNextResponse) println(Std.string(res), true);
-								}
-
-							case Raw(out):
-								if (hasError || displayNextResponse) {
-									var hasError = res.hasError ? "(has error)" : "";
-									println('$l: => Server response: $hasError', true);
-								}
-
-								if (displayNextResponse) println(out, true);
-
-							case Empty:
-								if (request == "display/completion") hasError = true;
-								if (hasError || displayNextResponse) println('$l: => Empty server response', true);
-						}
-				}
-
-				switch (currentAssert) {
-					case ExpectFailure(_): assertionResult(l, hasError);
-					case ExpectSuccess(_): assertionResult(l, !hasError);
-					case _:
-				}
-
-				if (displayNextResponse) displayNextResponse = false;
-				if (hasError && abortOnFailure) {
-					println('Failure detected, aborting rest of script.', true);
-					aborted = true;
-					exit(1); // TODO: find a way to configure with or without asserts
-				}
-
-				// TODO: make sure we use the actual display request order
-				// (including overlapping requests if any) instead of these
-				// compilation flags
-				#if haxerepro.displayrequests_wait
-					#if haxerepro.displayrequests_delay
-					haxe.Timer.delay(next, Std.parseInt(haxe.macro.Compiler.getDefine("haxerepro.displayrequests_delay")));
-					#else
-					next();
-					#end
-				#end
-			},
+			["-D display-details", "--times", "-D macro-times"].concat(params),
+			onServerResponse(request, l, next),
 			err -> throw err
 		);
+	}
 
-		// Continue immediately?
-		#if !haxerepro.displayrequests_wait
-			#if haxerepro.displayrequests_delay
-			haxe.Timer.delay(next, Std.parseInt(haxe.macro.Compiler.getDefine("haxerepro.displayrequests_delay")));
-			#else
+	function onServerResponse(
+		request:String,
+		l:Int,
+		next:Void->Void
+	):HaxeServerRequestResult->Void {
+		return function(res) {
+			var hasError = res.hasError;
+			var out:String = res.stderr.toString();
+
+			switch (currentAssert) {
+				case ExpectOutput(_, expected):
+					hasError = out != expected;
+
+					if (hasError) {
+						final a = new diff.FileData(haxe.io.Bytes.ofString(expected), "expected", Date.now());
+						final b = new diff.FileData(haxe.io.Bytes.ofString(out), "actual", Date.now());
+						var ctx:diff.Context = {
+							file1: a,
+							file2: b,
+							context: 10
+						}
+						final script = diff.Analyze.diff2Files(ctx);
+						var diff = diff.Printer.printUnidiff(ctx, script);
+						diff = diff.split("\n").slice(3).join("\n");
+						println(diff, true);
+					}
+
+					assertionResult(l, !hasError);
+
+				case _:
+			}
+
+			switch (request) {
+				case "compilation":
+					if (hasError) println('$l: => Compilation error:\n' + out.trim(), true);
+					else if (displayNextResponse) println(out.trim(), true);
+
+				case _:
+					switch (extractResult(out)) {
+						case JsonResult(res):
+							if (res.result != null && res.result.timers != null) {
+								#if haxerepro.print_timers
+								var buf = new StringBuf();
+								buf.add('Timings:');
+
+								printTimer(buf, res.result.timers, 0);
+								println(buf.toString());
+								#end
+
+								var parent = timers.exists(request)
+									? timers.get(request)
+									: { var arr = []; timers.set(request, arr); arr; };
+
+								parent.push({line: l, timer: res.result.timers});
+							}
+
+							switch (request) {
+								case "display/completion":
+									var res:CompletionResult = cast res.result;
+									var nbItems = try res.result.items.length catch(_) 0;
+
+									if (displayNextResponse) {
+										println('$l => Completion request returned $nbItems items', true);
+									}
+
+									switch (currentAssert) {
+										case ExpectItemCount(_, null):
+											hasError = nbItems == 0;
+											assertionResult(l, !hasError);
+
+										case ExpectItemCount(_, c):
+											hasError = c != nbItems;
+											assertionResult(l, !hasError);
+
+										case _:
+											hasError = false;
+									}
+
+									if (hasError) println('$l: => Completion request failed', true);
+
+								case "server/contexts" if (displayNextResponse):
+									var contexts:Array<HaxeServerContext> = cast res.result.result;
+									for (c in contexts) {
+										println('  ${c.index} ${c.desc} (${c.platform}, ${c.defines.length} defines)', true);
+										println('    signature: ${c.signature}', true);
+										// println('    defines: ${c.defines.map(d -> d.key).join(", ")}', true);
+									}
+
+								// TODO: other special case handling
+
+								case _:
+									if (hasError || displayNextResponse) {
+										var hasError = hasError ? "(has error)" : "";
+										println('$l: => Server response: $hasError', true);
+									}
+
+									// if (displayNextResponse) println(Json.stringify(res, "  "), true);
+									if (displayNextResponse) println(Std.string(res), true);
+							}
+
+						case Raw(out):
+							if (hasError || displayNextResponse) {
+								var hasError = res.hasError ? "(has error)" : "";
+								println('$l: => Server response: $hasError', true);
+							}
+
+							if (displayNextResponse) println(out, true);
+
+						case Empty:
+							if (request == "display/completion") hasError = true;
+							if (hasError || displayNextResponse) println('$l: => Empty server response', true);
+					}
+			}
+
+			switch (currentAssert) {
+				case ExpectFailure(_): assertionResult(l, hasError);
+				case ExpectSuccess(_): assertionResult(l, !hasError);
+				case _:
+			}
+
+			// if (displayNextResponse) displayNextResponse = false;
+			if (hasError && abortOnFailure) {
+				println('Failure detected, aborting rest of script.', true);
+				aborted = true;
+				exit(1); // TODO: find a way to configure with or without asserts
+			}
+
 			next();
-			#end
-		#end
-	}
-
-	// TODO: response type
-	function serverResponse(id:Null<Int>, request:String, result:Any):Void {
-		// tasks.push(function(next:Next):Void {
-		// 	trace('serverResponse #$id: "$request"');
-		// 	next(Success);
-		// });
-	}
-
-	// TODO: add support for assertions
-	function shellCommand(cmd:String, cb:Void->Void):Void {
-		var proc = ChildProcess.spawnSync(cmd);
-		if (proc.status > 0) {
-			var buf:Buffer = proc.stderr;
-			if (buf != null) Sys.println(buf.toString().trim());
 		}
-
-		var buf:Buffer = proc.stdout;
-		if (buf != null) Sys.println(buf.toString().trim());
-
-		cb();
 	}
 
 	function extractResult<T:{}>(out:String):ResponseKind<T> {
@@ -897,8 +933,8 @@ class ReplayRecording {
 
 	function logTime(k:String, t:Float):Void {
 		var old = times.get(k);
-		if (old == null) times.set(k, {count: 1, total: t});
-		else times.set(k, {count: old.count + 1, total: old.total + t});
+		if (old == null) times.set(k, {count: 1, total: t, max: t});
+		else times.set(k, {count: old.count + 1, total: old.total + t, max: Math.max(t, old.max)});
 	}
 
 	function didChangeTextDocument(event:DidChangeTextDocumentParams, next:Void->Void):Void {
@@ -946,6 +982,19 @@ enum VcsStatus {
 	GitReference(ref:String);
 	SvnRevision(rev:String);
 	None;
+}
+
+// TODO: allow multiple requests?
+enum TimersReporting {
+	None;
+	Aggregate;
+	Details(?request:String);
+}
+
+typedef Timings = {
+	final count:Int;
+	final total:Float;
+	final max:Float;
 }
 
 typedef ServerRecordingConfig = haxeLanguageServer.Configuration.ServerRecordingConfig & {
