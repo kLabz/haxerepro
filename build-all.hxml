@@ -1,3 +1,5 @@
 build-replay.hxml
 --next
 build-reduce.hxml
+--next
+build-analyze.hxml
