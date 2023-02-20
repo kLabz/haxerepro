@@ -52,7 +52,7 @@ class ReplayRecording {
 	var filename:String = "repro.log";
 
 	// Replay state
-	var protocolVersion:Float = 0.0;
+	var protocolVersion:Float = 1.0;
 	var lineNumber:Int = 0;
 	var muted:Bool = false;
 	var stepping:Bool = false;
