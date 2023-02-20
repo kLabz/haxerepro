@@ -763,12 +763,8 @@ class ReplayRecording {
 		params:Array<String>,
 		cb:Void->Void
 	):Void {
-		var start = Date.now().getTime();
-
 		var next = function() {
 			clearAssert();
-			if (logTimes) logTime(request, Date.now().getTime() - start);
-
 			if (stepping) pause(cb);
 			else cb();
 		}
@@ -777,10 +773,11 @@ class ReplayRecording {
 		println('$l: > Server request$idDesc "$request"', displayNextResponse);
 
 		params = params.map(maybeConvertPath);
+		var start = Date.now().getTime();
 
 		client.rawRequest(
 			["-D display-details", "--times", "-D macro-times"].concat(params),
-			onServerResponse(request, l, next),
+			onServerResponse(request, l, start, next),
 			err -> throw err
 		);
 	}
@@ -788,9 +785,12 @@ class ReplayRecording {
 	function onServerResponse(
 		request:String,
 		l:Int,
+		start:Float,
 		next:Void->Void
 	):HaxeServerRequestResult->Void {
 		return function(res) {
+			if (logTimes) logTime(request, Date.now().getTime() - start);
+
 			var hasError = res.hasError;
 			var out:String = res.stderr.toString();
 
