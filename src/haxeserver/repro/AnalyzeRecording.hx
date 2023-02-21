@@ -211,6 +211,11 @@ class AnalyzeRecording {
 
 							next();
 
+						case ServerLog:
+							// TODO: extract some infos?
+							getFileContent();
+							next();
+
 						case ServerError | CompilationResult | CompilationError:
 							getFileContent();
 							next();

@@ -373,6 +373,10 @@ class ReplayRecording {
 							getFileContent();
 							next();
 
+						case ServerLog:
+							getFileContent();
+							next();
+
 						case CompilationResult | CompilationError:
 							// Disabled printing for now as it can be confused with actual result from replay...
 							// var fail = (extractor.entry.match(CompilationError) || extractor.method == "failed") ? "failed" : "ok";

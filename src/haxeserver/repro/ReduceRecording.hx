@@ -204,6 +204,10 @@ class ReduceRecording {
 							nextLine(false);
 							next();
 
+						case ServerLog:
+							getFileContent(false);
+							next();
+
 						case ServerError | CompilationResult | CompilationError:
 							getFileContent(false);
 							next();
