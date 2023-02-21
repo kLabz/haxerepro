@@ -140,8 +140,14 @@ class ReplayRecording {
 
 	function pause(resume:Void->Void, ?msg:String = "Paused. Press <ENTER> to resume."):Void {
 		if (aborted || noInteractive) resume();
-		Sys.print(msg);
-		Sys.stdin().readLine();
+		Sys.print(msg + " ");
+
+		var line = Sys.stdin().readLine();
+		if (line == 'q') {
+			cleanup();
+			return exit(0);
+		}
+
 		resume();
 	}
 
@@ -498,7 +504,8 @@ class ReplayRecording {
 	}
 
 	function cleanup():Void {
-		file.close();
+		if (file != null) file.close();
+		file = null;
 
 		switch (vcsStatus) {
 			case GitReference(ref): resetGit(ref);
