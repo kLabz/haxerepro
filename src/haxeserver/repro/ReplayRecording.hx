@@ -886,7 +886,7 @@ class ReplayRecording {
 				case _:
 			}
 
-			// if (displayNextResponse) displayNextResponse = false;
+			if (displayNextResponse) displayNextResponse = false;
 			if (hasError && abortOnFailure) {
 				println('Failure detected, aborting rest of script.', true);
 				aborted = true;
