@@ -19,8 +19,9 @@ import haxeLanguageServer.Configuration;
 import haxeLanguageServer.DisplayServerConfig;
 import haxeLanguageServer.documents.HxTextDocument;
 import haxeserver.process.HaxeServerProcessConnect;
-import haxeserver.repro.Utils.shellCommand;
+import haxeserver.repro.Utils.makeRelative;
 import haxeserver.repro.Utils.printTimer;
+import haxeserver.repro.Utils.shellCommand;
 import languageServerProtocol.protocol.Protocol.DidChangeTextDocumentParams;
 
 using StringTools;
@@ -702,44 +703,24 @@ class ReplayRecording {
 		if (createdStash) svn("x-unshelve", "--drop", STASH_NAME);
 	}
 
-	function maybeConvertPath(b:String):String {
-		// TODO: clean that up.. also support non-C drive letters for windows
-		var a = b.split("\\").join("/");
-		if (a.startsWith("C:/")) a = "c" + a.substr(1);
+	function maybeConvertPath(a:String):String {
+		var isCwd = a.startsWith("--cwd ");
+		if (isCwd) a = a.substr("--cwd ".length);
 
-		if (a.charCodeAt(0) == "/".code || a.startsWith("c:/")) {
-			if (a.startsWith(root)) {
-				a = a.substr(root.length);
-				if (a.charCodeAt(0) == '/'.code) a = a.substr(1);
-				if (a == "") a = ".";
-				return a;
-			}
-			throw 'Absolute path outside root not handled yet ($a)';
-		}
-
-		if (a.startsWith("--cwd /") || a.startsWith("--cwd c:/")) {
-			if (a.startsWith("--cwd " + root)) {
-				a = a.substr("--cwd ".length + root.length);
-				if (a.charCodeAt(0) == '/'.code) a = a.substr(1);
-				if (a == "") a = ".";
-				return '--cwd $a';
-			}
-			throw 'Absolute path outside root not handled yet ($a)';
-		}
+		var relative = makeRelative(a, root);
+		if (relative != null) return isCwd ? '--cwd $relative' : relative;
 
 		try {
 			var data:{params:{file:String}} = cast Json.parse(a);
-			if (data.params.file.startsWith(root)) {
-				var file = data.params.file.substr(root.length);
-				if (file.charCodeAt(0) == '/'.code) file = file.substr(1);
-				if (file == "") file = ".";
-				data.params.file = file;
+			var relative = makeRelative(data.params.file, root);
 
+			if (relative != null) {
+				data.params.file = relative;
 				return Json.stringify(data);
 			}
 		} catch (_) {}
 
-		return b;
+		return a;
 	}
 
 	function serverJsonRequest(

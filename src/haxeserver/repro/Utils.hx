@@ -1,6 +1,7 @@
 package haxeserver.repro;
 
 import haxe.display.Protocol.Timer;
+import haxe.io.Path;
 import js.node.Buffer;
 import js.node.ChildProcess;
 
@@ -18,6 +19,36 @@ function shellCommand(cmd:String, cb:Void->Void):Void {
 	if (buf != null) Sys.println(buf.toString().trim());
 
 	cb();
+}
+
+function makeRelative(path:String, root:String):String {
+	if (path.charCodeAt(0) == "/".code) {
+		if (path.startsWith(root)) {
+			path = path.substr(root.length);
+			if (path.charCodeAt(0) == '/'.code) path = path.substr(1);
+			if (path == "") path = ".";
+			return path;
+		}
+
+		throw 'Absolute path outside root not handled yet ($path)';
+	}
+
+	if (path.charCodeAt(1) == ":".code && path.charCodeAt(2) == "/".code) {
+		var norm = Path.normalize(path);
+		var upper = norm.toUpperCase();
+		var root = Path.normalize(root).toUpperCase();
+
+		if (upper.startsWith(root)) {
+			path = norm.substr(root.length);
+			if (path.charCodeAt(0) == '/'.code) path = path.substr(1);
+			if (path == "") path = ".";
+			return path;
+		}
+
+		throw 'Absolute path outside root not handled yet ($path)';
+	}
+
+	return null;
 }
 
 function printTimer(buf:StringBuf, timerData:Timer, depth:Int) {
