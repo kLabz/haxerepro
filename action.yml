@@ -3,11 +3,11 @@ description: 'Run a server recording through github actions'
 author: 'Rudy G <haxe@kla.bz>'
 inputs:
   path:
-    description: 'Path to use as current working directory.'
-    required: false
-  path:
     description: 'Path to the recording directory.'
     required: true
+  cwd:
+    description: 'Path to use as current working directory.'
+    required: false
   file:
     description: 'Log file to use in the recording directory.'
     required: false
