@@ -16,7 +16,6 @@ import sys.FileSystem;
 import sys.io.File;
 import sys.io.FileInput;
 
-import haxeLanguageServer.Configuration;
 import haxeLanguageServer.DisplayServerConfig;
 import haxeLanguageServer.documents.HxTextDocument;
 import haxeserver.process.HaxeServerProcessConnect;
@@ -40,7 +39,7 @@ class ReplayRecording {
 	// Recording configuration
 	var root:String = "./";
 	var config:ServerRecordingConfig;
-	var userConfig:UserConfig;
+	var userConfig:Dynamic;
 	var displayServer:DisplayServerConfig;
 	var displayArguments:Array<String>;
 
@@ -1057,6 +1056,11 @@ typedef Timings = {
 	final max:Float;
 }
 
-typedef ServerRecordingConfig = haxeLanguageServer.Configuration.ServerRecordingConfig & {
+typedef ServerRecordingConfig = {
+	var enabled:Bool;
+	var path:String;
+	var exclude:Array<String>;
+	var excludeUntracked:Bool;
+	var watch:Array<String>;
 	@:optional var version:Float;
 }
