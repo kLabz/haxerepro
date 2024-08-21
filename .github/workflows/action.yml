@@ -1,0 +1,32 @@
+name: Github Action
+on: [push]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        haxe: [4.3.6, latest]
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - uses: krdlab/setup-haxe@v1
+        with:
+          haxe-version: ${{ matrix.haxe }}
+
+      - run: haxe -version
+      - run: haxelib install --always install.hxml
+
+      - name: Repro stackoverflow (min)
+        # This repro only reproduces on nightlies
+        if: ${{ matrix.haxe == 'latest' }}
+        uses: klabz/haxerepro@github-action
+        with:
+          cwd: projects/stackoverflow-min
+          path: recording
+          file: repro-min.log

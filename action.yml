@@ -1,0 +1,27 @@
+name: 'Haxe compilation server testing'
+description: 'Run a server recording through github actions'
+author: 'Rudy G <haxe@kla.bz>'
+inputs:
+  path:
+    description: 'Path to use as current working directory.'
+    required: false
+  path:
+    description: 'Path to the recording directory.'
+    required: true
+  file:
+    description: 'Log file to use in the recording directory.'
+    required: false
+    default: 'repro.log'
+  no-watchers:
+    description: 'This recording was made without filesystem watchers.'
+    required: false
+    default: false
+  silent:
+    description: 'Only show results.'
+    required: false
+    default: true
+runs:
+  using: 'node20'
+  main: 'bin/action.js'
+branding:
+  color: 'orange'

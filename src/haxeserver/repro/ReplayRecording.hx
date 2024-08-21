@@ -59,6 +59,7 @@ class ReplayRecording {
 	// Replay state
 	var protocolVersion:Float = 1.0;
 	var lineNumber:Int = 0;
+	var running:Bool = false;
 	var muted:Bool = false;
 	var stepping:Bool = false;
 	var abortOnFailure:Bool = false;
@@ -83,10 +84,17 @@ class ReplayRecording {
 	var started(get, never):Bool;
 	function get_started():Bool return client != null;
 
-	public static function main() new ReplayRecording();
 	public static function plural(nb:Int):String return nb != 1 ? "s" : "";
 
-	function new() {
+	public static function main() {
+		var path:String = null;
+		var silent:Bool = false;
+		var noInteractive:Bool = false;
+		var noWatchers:Bool = false;
+		var logTimes:Bool = false;
+		var port:Null<Int> = null;
+		var filename:String = null;
+
 		var handler = hxargs.Args.generate([
 			@doc("Path to the recording directory (mandatory)")
 			["--path"] => p -> path = p,
@@ -122,6 +130,26 @@ class ReplayRecording {
 			Sys.exit(1);
 		}
 
+		var replay = new ReplayRecording(path, silent, noInteractive, noWatchers, logTimes, port, filename);
+		replay.run();
+	}
+
+	public function new(
+		path:String,
+		silent:Bool = false,
+		noInteractive:Bool = false,
+		noWatchers:Bool = false,
+		logTimes:Bool = false,
+		port:Null<Int> = null,
+		filename:String = "repro.log",
+	) {
+		this.path = path;
+		this.silent = silent;
+		this.noInteractive = noInteractive;
+		this.noWatchers = noWatchers;
+		this.logTimes = logTimes;
+		this.port = port;
+
 		var filepath = Path.join([path, filename]);
 		if (!FileSystem.exists(filepath) || FileSystem.isDirectory(filepath)) {
 			console.error('Invalid recording file provided, skipping replay.');
@@ -129,6 +157,12 @@ class ReplayRecording {
 		}
 
 		this.file = File.read(filepath);
+	}
+
+	// TODO: callback..
+	public function run() {
+		if (running) throw 'Replay already started.';
+		running = true;
 		next();
 	}
 

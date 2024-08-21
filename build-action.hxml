@@ -1,0 +1,16 @@
+-cp src
+-cp haxe-lsp/shared
+
+-lib haxeserver
+-lib hxargs
+-lib safety
+-lib hxnodejs
+
+-D analyzer-optimize
+-D eval-pretty-print
+
+-lib language-server-protocol
+-lib vscode-json-rpc
+
+-main haxeserver.repro.ReplayAction
+--js bin/action.js
