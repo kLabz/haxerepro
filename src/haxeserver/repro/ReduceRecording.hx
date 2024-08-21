@@ -142,7 +142,7 @@ class ReduceRecording {
 
 						// Initialization
 
-						case UserConfig | DisplayServer | DisplayArguments | ServerRecordingConfig | CheckoutGitRef | CheckoutSvnRevision:
+						case Haxe | UserConfig | DisplayServer | DisplayArguments | ServerRecordingConfig | CheckoutGitRef | CheckoutSvnRevision:
 							addLine(line);
 							getLine(true);
 							next();
@@ -215,6 +215,7 @@ class ReduceRecording {
 						// Editor events
 
 						case DidChangeTextDocument if (!keepDidChangeTextDocument):
+							getLine(false);
 							next();
 
 						// TODO: if we're currently skipping (from beginning of

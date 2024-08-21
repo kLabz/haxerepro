@@ -35,4 +35,29 @@ abstract Extractor(EReg) from EReg {
 
 	public var rest(get, never):String;
 	function get_rest():String return this.matched(6);
+
+	public function getSimplifiedLine():String {
+		var buf = new StringBuf();
+		buf.add(kind);
+		buf.add(" ");
+		buf.add(entry);
+
+		if (id != null) {
+			buf.add(" ");
+			buf.add(id);
+		}
+
+		if (method != null) {
+			buf.add(' "');
+			buf.add(method);
+			buf.add('"');
+		}
+
+		if (rest != null) {
+			buf.add(" ");
+			buf.add(rest);
+		}
+
+		return buf.toString();
+	}
 }

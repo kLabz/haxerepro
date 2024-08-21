@@ -3,6 +3,7 @@ package haxeserver.repro;
 enum abstract RecordingEntry(String) {
 	// Initialization
 	var Root = "root";
+	var Haxe = "haxe";
 	var UserConfig = "userConfig";
 	var ServerRecordingConfig = "serverRecordingConfig";
 	var DisplayServer = "displayServer";
@@ -14,6 +15,7 @@ enum abstract RecordingEntry(String) {
 	var ApplySvnPatch = "applySvnPatch";
 
 	// Direct communication between client and server
+	var Compile = "compile";
 	var ServerRequest = "serverRequest";
 	var ServerRequestQueued = "serverRequestQueued";
 	var ServerRequestCancelled = "serverRequestCancelled";
@@ -31,6 +33,7 @@ enum abstract RecordingEntry(String) {
 	var Mute = "mute";
 	var StepByStep = "stepByStep";
 	var DisplayResponse = "displayResponse";
+	var DisplayTimings = "displayTimings";
 	var Abort = "abort";
 	var AbortOnFailure = "abortOnFailure";
 	var ShellCommand = "shell";

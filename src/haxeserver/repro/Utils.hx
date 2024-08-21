@@ -9,14 +9,27 @@ using StringTools;
 
 // TODO: add support for assertions
 function shellCommand(cmd:String, cb:Void->Void):Void {
-	var proc = ChildProcess.spawnSync(cmd);
+	var proc = ChildProcess.spawnSync(cmd, {shell: true});
+
 	if (proc.status > 0) {
+		Sys.print('\x1b[31m');
+		Sys.print('-> Error code ${proc.status}');
+		Sys.println('\x1b[0m');
+
 		var buf:Buffer = proc.stderr;
-		if (buf != null) Sys.println(buf.toString().trim());
+		if (buf != null) {
+			var out = buf.toString().trim();
+			if (out != "") Sys.println(out);
+		}
 	}
 
 	var buf:Buffer = proc.stdout;
-	if (buf != null) Sys.println(buf.toString().trim());
+	if (buf != null) {
+		if (buf != null) {
+			var out = buf.toString().trim();
+			if (out != "") Sys.println(out);
+		}
+	}
 
 	cb();
 }
@@ -51,18 +64,72 @@ function makeRelative(path:String, root:String):String {
 	return null;
 }
 
-function printTimer(buf:StringBuf, timerData:Timer, depth:Int) {
+function printCol(buf:StringBuf, colSize:Array<Int>, col:Int, content:String, alignRight:Bool) {
+	if (!alignRight) buf.add(content);
+	for (_ in 0...(colSize[col]-content.length)) buf.add(' ');
+	if (alignRight) buf.add(content);
+	buf.add(' | ');
+}
+
+function printTimers(buf:StringBuf, timers:Timer) {
+	if (timers.time == 0) return;
+
+	var cols = ["name", "time(s)", "%", "p%", "#"];
+	var colSize = cols.map(s -> s.length);
+	var printCol = printCol.bind(buf, colSize);
+
+	function growCol(col:Int, size:Int) if (size > colSize[col]) colSize[col] = size;
+
+	function loop(t:Timer, depth:Int) {
+		growCol(0, depth * 2 + t.name.length);
+		growCol(1, Std.string(Math.round(t.time * 1000) / 1000).length);
+		if (t.percentTotal != null) growCol(2, Std.string(Math.round(t.percentTotal)).length);
+		if (t.percentParent != null) growCol(3, Std.string(Math.round(t.percentParent)).length);
+		if (t.calls != null) growCol(4, Std.string(t.calls).length);
+		if (t.children != null) for (t in t.children) loop(t, depth + 1);
+	}
+
+	loop(timers, 0);
+
 	buf.add('\n');
-	for (_ in 0...depth) buf.add('  ');
-	buf.add('- ');
+	for (i => c in cols) printCol(i, c, i > 0);
+	buf.add('info\n');
+	printTimer(buf, colSize, timers, 0);
+}
 
-	if (timerData.path == "") buf.add('[root]');
-	else buf.add(timerData.path);
+function printTimer(buf:StringBuf, colSize:Array<Int>, t:Timer, depth:Int) {
+	var printCol = printCol.bind(buf, colSize);
 
-	buf.add(' (');
-	buf.add(secondsToMs(timerData.time));
-	buf.add(')');
-	if (timerData.children != null) for (c in timerData.children) printTimer(buf, c, depth + 1);
+	function print(name) {
+		for (_ in 0...(depth-1)) name = "  " + name;
+
+		printCol(0, name, false);
+		printCol(1, Std.string(Math.round(t.time * 1000) / 1000), true);
+		printCol(2, t.percentTotal == null ? '' : Std.string(Math.round(t.percentTotal)), true);
+		printCol(3, t.percentParent == null ? '' : Std.string(Math.round(t.percentParent)), true);
+		printCol(4, t.calls == null ? '' : Std.string(t.calls), true);
+		if (t.info != null) buf.add(t.info);
+		buf.add('\n');
+	}
+
+	var w = 0;
+	var isRoot = t.name == "";
+
+	if (isRoot) {
+		w = Lambda.fold(colSize, (c, acc) -> acc + c + 3, -1);
+		for (_ in 0...w) buf.add('-');
+		buf.add('\n');
+	} else {
+		print(t.name);
+	}
+
+	if (t.children != null) for (t in t.children) printTimer(buf, colSize, t, depth + 1);
+
+	if (isRoot) {
+		for (_ in 0...w) buf.add('-');
+		buf.add('\n');
+		print("total");
+	}
 }
 
 function secondsToMs(seconds:Float):String {

@@ -125,7 +125,7 @@ class AnalyzeRecording {
 
 						// Initialization
 
-						case UserConfig | DisplayServer | DisplayArguments | ServerRecordingConfig | CheckoutGitRef | CheckoutSvnRevision:
+						case Haxe | UserConfig | DisplayServer | DisplayArguments | ServerRecordingConfig | CheckoutGitRef | CheckoutSvnRevision:
 							getLine();
 							next();
 
@@ -157,7 +157,7 @@ class AnalyzeRecording {
 							}
 
 							// ↓ Request args available there if needed
-							nextLine();
+							getLine();
 
 							next();
 
@@ -182,7 +182,7 @@ class AnalyzeRecording {
 							}
 
 							// ↓ Request args available there if needed
-							nextLine();
+							getLine();
 
 							next();
 
@@ -204,10 +204,13 @@ class AnalyzeRecording {
 								method: extractor.method
 							};
 
-							for (item in queue) item.stack.push(stackItem);
+							for (item in queue) {
+								if (item == null) continue; // TODO: shouldn't be needed?!
+								item.stack.push(stackItem);
+							}
 
 							// ↓ Request args available there if needed
-							nextLine();
+							getLine();
 
 							next();
 
@@ -258,19 +261,26 @@ class AnalyzeRecording {
 	inline function exit(code:Int = 1):Void Sys.exit(code);
 	inline function println(s:String):Void Sys.println(s);
 
-	function getLine():String {
+	// TODO: factorize with ReplayRecording
+	function getLine(?skipEmpty:Bool = true, ?skipComments:Bool = true):String {
 		lineNumber++;
-		var ret = file.readLine();
-		return ret;
+		try {
+			var ret = file.readLine();
+			if (skipEmpty && ret == "") return getLine(true, skipComments);
+			if (skipComments && ret.charCodeAt(0) == '#'.code) return getLine(skipEmpty, true);
+			return ret;
+		} catch(_) {
+			return "";
+		}
 	}
 
 	function getFileContent():String {
-		var next = nextLine();
+		var next = getLine(false, false);
 
 		if (next == "<<EOF") {
 			var ret = new StringBuf();
 			while (true) {
-				var line = getLine();
+				var line = getLine(false, false);
 				if (line == "EOF") break;
 				ret.add(line);
 				ret.add("\n");
@@ -279,16 +289,6 @@ class AnalyzeRecording {
 		}
 
 		return next;
-	}
-
-	function nextLine():String {
-		// TODO: handle EOF
-		while (true) {
-			var ret = getLine();
-			if (ret == "") continue;
-			if (ret.charCodeAt(0) == '#'.code) continue;
-			return ret;
-		}
 	}
 }
 

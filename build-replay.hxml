@@ -8,6 +8,8 @@
 -lib hxnodejs
 
 -D analyzer-optimize
+# -D message-reporting=pretty
+-D eval-pretty-print
 
 -lib language-server-protocol
 -lib vscode-json-rpc

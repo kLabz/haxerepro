@@ -11,6 +11,7 @@ import js.Node.console;
 import js.node.Buffer;
 import js.node.ChildProcess;
 import js.node.child_process.ChildProcess as ChildProcessObject;
+import js.node.stream.Readable;
 import sys.FileSystem;
 import sys.io.File;
 import sys.io.FileInput;
@@ -19,8 +20,10 @@ import haxeLanguageServer.Configuration;
 import haxeLanguageServer.DisplayServerConfig;
 import haxeLanguageServer.documents.HxTextDocument;
 import haxeserver.process.HaxeServerProcessConnect;
+import haxeserver.process.HaxeServerProcessNode;
+import haxeserver.process.IHaxeServerProcess;
 import haxeserver.repro.Utils.makeRelative;
-import haxeserver.repro.Utils.printTimer;
+import haxeserver.repro.Utils.printTimers;
 import haxeserver.repro.Utils.shellCommand;
 import languageServerProtocol.protocol.Protocol.DidChangeTextDocumentParams;
 
@@ -51,7 +54,7 @@ class ReplayRecording {
 	var noInteractive:Bool = false;
 	var noWatchers:Bool = false;
 	var logTimes:Bool = false;
-	var port:Int = 7000;
+	var port:Null<Int> = null;
 	var filename:String = "repro.log";
 
 	// Replay state
@@ -61,6 +64,7 @@ class ReplayRecording {
 	var stepping:Bool = false;
 	var abortOnFailure:Bool = false;
 	var displayNextResponse:Bool = false;
+	var displayNextTimings:Bool = false;
 	var currentAssert:Assertion = None;
 	var assertions = new Map<Int, AssertionItem>();
 
@@ -90,7 +94,7 @@ class ReplayRecording {
 			@doc("Log file to use in the recording directory. Default is `repro.log`.")
 			["--file"] => f -> filename = f,
 			@doc("Port to use internally for haxe server. Should *not* refer to an existing server. Default is `7000`.")
-			["--port"] => p -> port = p,
+			["--port"] => (p:Int) -> port = p,
 			@doc("This recording was made without filesystem watchers.")
 			["--no-watchers"] => () -> noWatchers = true,
 			@doc("Skip all prompts.")
@@ -130,12 +134,24 @@ class ReplayRecording {
 	}
 
 	function start(cb:Void->Void):Void {
-		server = ChildProcess.spawn("haxe", ["--wait", Std.string(port)]);
-		Sys.sleep(0.5);
+		if (port == null) {
+			// println("Using internal haxe server");
+			server = null;
 
-		var process = new HaxeServerProcessConnect("haxe", port, []);
-		client = new HaxeServerAsync(() -> process);
-		cb();
+			var process:HaxeServerProcessNode = null;
+			process = new HaxeServerProcessNode("haxe", [], cb);
+			client = new HaxeServerAsync(() -> process);
+		} else {
+			// println('Using haxe server on port $port');
+
+			// Allowed to fail -- lets user hook to their own server
+			server = ChildProcess.spawn("haxe", ["--wait", Std.string(port)]);
+			Sys.sleep(0.5);
+
+			var process = new HaxeServerProcessConnect("haxe", port, []);
+			client = new HaxeServerAsync(() -> process);
+			cb();
+		}
 	}
 
 	function pause(resume:Void->Void, ?msg:String = "Paused. Press <ENTER> to resume."):Void {
@@ -195,7 +211,7 @@ class ReplayRecording {
 								count: res.count + 1,
 								max: Math.max(Math.ceil(item.timer.time * 1000), res.max)
 							},
-							{total: 0, count: 0, max: 0}
+							{total: 0.0, count: 0, max: 0}
 						);
 
 						if (timings.total == 0) continue;
@@ -210,12 +226,13 @@ class ReplayRecording {
 					for (r => data in timers) {
 						if (request != null && request != r) continue;
 
+						// TODO: adjust output
 						for (d in data) {
 							buf.add('\nL');
 							buf.add(d.line);
 							buf.add(' - ');
 							buf.add(r);
-							printTimer(buf, d.timer, 1);
+							printTimers(buf, d.timer);
 						}
 					}
 
@@ -288,6 +305,11 @@ class ReplayRecording {
 							next();
 
 						// TODO: actually use this
+						case Haxe:
+							var haxeVersion = getLine();
+							next();
+
+						// TODO: actually use this
 						case DisplayServer:
 							displayServer = getData();
 							next();
@@ -298,7 +320,7 @@ class ReplayRecording {
 
 						case CheckoutGitRef:
 							println('$l: > Checkout git ref');
-							checkoutGitRef(nextLine(), next);
+							checkoutGitRef(getLine(), next);
 
 						case ApplyGitPatch:
 							println('$l: > Apply git patch');
@@ -310,13 +332,28 @@ class ReplayRecording {
 
 						case CheckoutSvnRevision:
 							println('$l: > Checkout svn revision');
-							checkoutSvnRevision(nextLine(), next);
+							checkoutSvnRevision(getLine(), next);
 
 						case ApplySvnPatch:
 							println('$l: > Apply svn patch');
 							applySvnPatch(next);
 
 						// Direct communication between client and server
+
+						case Compile:
+							if (!started) {
+								println('$l: replay not started yet. Use "- start" before sending requests.');
+								exit(1);
+							}
+
+							if (!aborted) {
+								var line = getLine();
+								var data:Array<String> = cast Json.parse(line);
+								serverRequest(l, null, extractor.method, true, data, next);
+							} else {
+								getLine();
+								next();
+							}
 
 						case ServerRequest:
 							if (!started) {
@@ -325,7 +362,7 @@ class ReplayRecording {
 							}
 
 							if (!aborted) {
-								var line = nextLine();
+								var line = getLine();
 								switch (line.charCodeAt(0)) {
 									case '{'.code:
 										var data:Dynamic = Json.parse(line);
@@ -333,10 +370,10 @@ class ReplayRecording {
 
 									case _:
 										var data:Array<String> = cast Json.parse(line);
-										serverRequest(l, extractor.id, extractor.method, data, next);
+										serverRequest(l, extractor.id, extractor.method, false, data, next);
 								}
 							} else {
-								nextLine();
+								getLine();
 								next();
 							}
 
@@ -346,7 +383,7 @@ class ReplayRecording {
 
 						case ServerRequestCancelled:
 							// Nothing to do?
-							nextLine();
+							getLine();
 							next();
 
 						case ServerResponse:
@@ -358,7 +395,7 @@ class ReplayRecording {
 							// var desc = (id != null || method != null) ? " for" : "";
 							// println('$l: < Server response${desc}${idDesc}${methodDesc}');
 							// TODO: check against actual result
-							nextLine();
+							getLine();
 							next();
 
 						case ServerError:
@@ -456,12 +493,16 @@ class ReplayRecording {
 							displayNextResponse = true;
 							next();
 
+						case DisplayTimings:
+							displayNextTimings = true;
+							next();
+
 						case Echo:
 							println('$l: ${extractor.method}');
 							next();
 
 						case ShellCommand:
-							var cmd = nextLine();
+							var cmd = getLine();
 							println('$l: shell cmd `$cmd`');
 							shellCommand(cmd, next);
 
@@ -530,7 +571,16 @@ class ReplayRecording {
 		if (!aborted && !muted && (ignoreSilent || !silent)) Sys.println(s);
 	}
 
+	function onServerMessage(msg:String):Void {
+		Sys.print('\x1b[2m');
+		Sys.print(msg);
+		Sys.println('\x1b[0m');
+	}
+
 	function displayTimingsTable(heading:String, times:Map<String, Timings>):Void {
+		// Skip empty timings
+		if (!times.keys().hasNext()) return;
+
 		var buf = new StringBuf();
 		buf.add('\n');
 
@@ -579,18 +629,25 @@ class ReplayRecording {
 		Sys.println(buf.toString());
 	}
 
-	function getLine():String {
+	function getLine(?skipEmpty:Bool = true, ?skipComments:Bool = true):String {
 		lineNumber++;
-		return file.readLine();
+		try {
+			var ret = file.readLine();
+			if (skipEmpty && ret == "") return getLine(true, skipComments);
+			if (skipComments && ret.charCodeAt(0) == '#'.code) return getLine(skipEmpty, true);
+			return ret;
+		} catch(_) {
+			return "";
+		}
 	}
 
 	function getFileContent():String {
-		var next = nextLine();
+		var next = getLine(false, false);
 
 		if (next == "<<EOF") {
 			var ret = new StringBuf();
 			while (true) {
-				var line = getLine();
+				var line = getLine(false, false);
 				if (line == "EOF") break;
 				ret.add(line);
 				ret.add("\n");
@@ -601,18 +658,8 @@ class ReplayRecording {
 		return next;
 	}
 
-	function nextLine():String {
-		// TODO: handle EOF
-		while (true) {
-			var ret = getLine();
-			if (ret == "") continue;
-			if (ret.charCodeAt(0) == '#'.code) continue;
-			return ret;
-		}
-	}
-
 	function getData<T:{}>():T
-		return cast Json.parse(nextLine());
+		return cast Json.parse(getLine());
 
 	function git(args:Rest<String>):String {
 		var proc = ChildProcess.spawnSync("git", args.toArray());
@@ -745,13 +792,14 @@ class ReplayRecording {
 			"--display",
 			Json.stringify({method: method, id: id, params: params})
 		]);
-		serverRequest(l, id, method, args, next);
+		serverRequest(l, id, method, false, args, next);
 	}
 
 	function serverRequest(
 		l:Int,
 		id:Null<Int>,
 		request:String,
+		isCompilation:Bool,
 		params:Array<String>,
 		cb:Void->Void
 	):Void {
@@ -761,15 +809,21 @@ class ReplayRecording {
 			else cb();
 		}
 
-		var idDesc = id == null ? '' : ' #$id';
-		println('$l: > Server request$idDesc "$request"', displayNextResponse);
+		if (isCompilation) {
+			println('$l: > Compilation "$request"', displayNextResponse);
+		} else {
+			var idDesc = id == null ? '' : ' #$id';
+			println('$l: > Server request$idDesc "$request"', displayNextResponse);
+		}
 
 		params = params.map(maybeConvertPath);
 		var start = Date.now().getTime();
 
 		client.rawRequest(
-			["-D display-details", "--times", "-D macro-times"].concat(params),
-			onServerResponse(request, l, start, next),
+			displayNextTimings
+				? ["-D display-details", "--times", "-D macro-times"].concat(params)
+				: ["-D", "display-details"].concat(params),
+			onServerResponse(isCompilation ? "compilation" : request, l, start, next),
 			err -> throw err
 		);
 	}
@@ -812,19 +866,21 @@ class ReplayRecording {
 			switch (request) {
 				case "compilation":
 					if (hasError) println('$l: => Compilation error:\n' + out.trim(), true);
-					else if (displayNextResponse) println(out.trim(), true);
+					else if (displayNextResponse) {
+						println(out.trim(), true);
+					}
 
 				case _:
 					switch (extractResult(out)) {
 						case JsonResult(res):
 							if (res.result != null && res.result.timers != null) {
-								#if haxerepro.print_timers
-								var buf = new StringBuf();
-								buf.add('Timings:');
-
-								printTimer(buf, res.result.timers, 0);
-								println(buf.toString());
-								#end
+								if (displayNextTimings) {
+									var buf = new StringBuf();
+									buf.add('\x1b[2m');
+									printTimers(buf, res.result.timers);
+									buf.add('\x1b[0m');
+									println(buf.toString());
+								}
 
 								var parent = timers.exists(request)
 									? timers.get(request)
@@ -840,6 +896,9 @@ class ReplayRecording {
 
 									if (displayNextResponse) {
 										println('$l => Completion request returned $nbItems items', true);
+										// if (hasError) println(out.trim(), true);
+										// if (res != null) println(haxe.Json.stringify(res, "  "));
+										if (hasError || res == null) println(out.trim(), true);
 									}
 
 									switch (currentAssert) {
@@ -874,7 +933,10 @@ class ReplayRecording {
 									}
 
 									// if (displayNextResponse) println(Json.stringify(res, "  "), true);
-									if (displayNextResponse) println(Std.string(res), true);
+									if (displayNextResponse) {
+										println(Std.string(res), true);
+										println(out.trim(), true);
+									}
 							}
 
 						case Raw(out):
@@ -897,7 +959,13 @@ class ReplayRecording {
 				case _:
 			}
 
+			if (displayNextResponse) {
+				var serverOut = res.stdout?.toString();
+				if (serverOut != "") onServerMessage(serverOut.trim());
+			}
+
 			if (displayNextResponse) displayNextResponse = false;
+			if (displayNextTimings) displayNextTimings = false;
 			if (hasError && abortOnFailure) {
 				println('Failure detected, aborting rest of script.', true);
 				aborted = true;
